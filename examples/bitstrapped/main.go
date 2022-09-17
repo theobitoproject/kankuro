@@ -4,13 +4,13 @@ import (
 	"log"
 	"os"
 
-	"github.com/bitstrapped/airbyte"
-	"github.com/bitstrapped/airbyte/examples/httpsource/apisource"
+	"github.com/theobitoproject/kankuro"
+	"github.com/theobitoproject/kankuro/examples/bitstrapped/apisource"
 )
 
 func main() {
 	hsrc := apisource.NewAPISource("https://api.bitstrapped.com")
-	runner := airbyte.NewSourceRunner(hsrc, os.Stdout)
+	runner := kankuro.NewSourceRunner(hsrc, os.Stdout)
 	err := runner.Start()
 	if err != nil {
 		log.Fatal(err)

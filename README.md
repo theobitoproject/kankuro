@@ -76,4 +76,4 @@ ENTRYPOINT ["/base/app"]
 
 ### Contributors 
 
-- We'd like to give a shoutout and thank you to @ajzo90 and his initial work on https://github.com/ajzo90/airbyte-http-connector. @ajzo90's project inspired this project 
+- We'd like to give a shoutout and thank you to @ajzo90 and his initial work on https://github.com/ajzo90/airbyte-http-connector. @ajzo90's project inspired this project

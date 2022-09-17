@@ -1,10 +1,11 @@
-package airbyte
+package kankuro
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bitstrapped/airbyte/schema"
 	"reflect"
+
+	"github.com/theobitoproject/kankuro/schema"
 )
 
 // Infer schema translates golang structs to JSONSchema format

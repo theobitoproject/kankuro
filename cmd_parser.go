@@ -1,4 +1,4 @@
-package airbyte
+package kankuro
 
 import (
 	"encoding/json"

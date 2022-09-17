@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bitstrapped/airbyte"
+	"github.com/theobitoproject/kankuro"
 )
 
 type APISource struct {
@@ -22,38 +22,38 @@ type HTTPConfig struct {
 	APIKey string `json:"apiKey"`
 }
 
-func NewAPISource(baseURL string) airbyte.Source {
+func NewAPISource(baseURL string) kankuro.Source {
 	return APISource{
 		baseURL: baseURL,
 	}
 }
 
-func (h APISource) Spec(logTracker airbyte.LogTracker) (*airbyte.ConnectorSpecification, error) {
-	if err := logTracker.Log(airbyte.LogLevelInfo, "Running Spec"); err != nil {
+func (h APISource) Spec(logTracker kankuro.LogTracker) (*kankuro.ConnectorSpecification, error) {
+	if err := logTracker.Log(kankuro.LogLevelInfo, "Running Spec"); err != nil {
 		return nil, err
 	}
-	return &airbyte.ConnectorSpecification{
+	return &kankuro.ConnectorSpecification{
 		DocumentationURL:      "https://bitstrapped.com",
 		ChangeLogURL:          "https://bitstrapped.com",
 		SupportsIncremental:   false,
 		SupportsNormalization: true,
 		SupportsDBT:           true,
-		SupportedDestinationSyncModes: []airbyte.DestinationSyncMode{
-			airbyte.DestinationSyncModeOverwrite,
+		SupportedDestinationSyncModes: []kankuro.DestinationSyncMode{
+			kankuro.DestinationSyncModeOverwrite,
 		},
-		ConnectionSpecification: airbyte.ConnectionSpecification{
+		ConnectionSpecification: kankuro.ConnectionSpecification{
 			Title:       "Example HTTP Source",
 			Description: "This is an example http source for the docs's",
 			Type:        "object",
-			Required:    []airbyte.PropertyName{"apiKey"},
-			Properties: airbyte.Properties{
-				Properties: map[airbyte.PropertyName]airbyte.PropertySpec{
+			Required:    []kankuro.PropertyName{"apiKey"},
+			Properties: kankuro.Properties{
+				Properties: map[kankuro.PropertyName]kankuro.PropertySpec{
 					"apiKey": {
 						Description: "api key to access http source, valid uuid",
 						Examples:    []string{"xxxx-xxxx-xxxx-xxxx"},
-						PropertyType: airbyte.PropertyType{
-							Type: []airbyte.PropType{
-								airbyte.String,
+						PropertyType: kankuro.PropertyType{
+							Type: []kankuro.PropType{
+								kankuro.String,
 							},
 						},
 					},
@@ -63,12 +63,12 @@ func (h APISource) Spec(logTracker airbyte.LogTracker) (*airbyte.ConnectorSpecif
 	}, nil
 }
 
-func (h APISource) Check(srcCfgPath string, logTracker airbyte.LogTracker) error {
-	if err := logTracker.Log(airbyte.LogLevelDebug, "validating api connection"); err != nil {
+func (h APISource) Check(srcCfgPath string, logTracker kankuro.LogTracker) error {
+	if err := logTracker.Log(kankuro.LogLevelDebug, "validating api connection"); err != nil {
 		return err
 	}
 	var srcCfg HTTPConfig
-	err := airbyte.UnmarshalFromPath(srcCfgPath, &srcCfg)
+	err := kankuro.UnmarshalFromPath(srcCfgPath, &srcCfg)
 	if err != nil {
 		return err
 	}
@@ -81,61 +81,61 @@ func (h APISource) Check(srcCfgPath string, logTracker airbyte.LogTracker) error
 	if resp.StatusCode != http.StatusOK {
 		return errors.New("invalid status")
 	}
-	
+
 	return resp.Body.Close()
 }
 
-func (h APISource) Discover(srcCfgPath string, logTracker airbyte.LogTracker) (*airbyte.Catalog, error) {
+func (h APISource) Discover(srcCfgPath string, logTracker kankuro.LogTracker) (*kankuro.Catalog, error) {
 	var srcCfg HTTPConfig
-	err := airbyte.UnmarshalFromPath(srcCfgPath, &srcCfg)
+	err := kankuro.UnmarshalFromPath(srcCfgPath, &srcCfg)
 	if err != nil {
 		return nil, err
 	}
 
-	return &airbyte.Catalog{Streams: []airbyte.Stream{{
+	return &kankuro.Catalog{Streams: []kankuro.Stream{{
 		Name: "users",
-		JSONSchema: airbyte.Properties{
-			Properties: map[airbyte.PropertyName]airbyte.PropertySpec{
+		JSONSchema: kankuro.Properties{
+			Properties: map[kankuro.PropertyName]kankuro.PropertySpec{
 				"userid": {
-					PropertyType: airbyte.PropertyType{
-						Type:        []airbyte.PropType{airbyte.Integer, airbyte.Null},
-						AirbyteType: airbyte.BigInteger},
+					PropertyType: kankuro.PropertyType{
+						Type:        []kankuro.PropType{kankuro.Integer, kankuro.Null},
+						AirbyteType: kankuro.BigInteger},
 					Description: "user ID - see the big int",
 				},
 				"name": {
-					PropertyType: airbyte.PropertyType{
-						Type: []airbyte.PropType{airbyte.String, airbyte.Null},
+					PropertyType: kankuro.PropertyType{
+						Type: []kankuro.PropType{kankuro.String, kankuro.Null},
 					},
 					Description: "user name",
 				},
 			},
 		},
-		SupportedSyncModes: []airbyte.SyncMode{
-			airbyte.SyncModeFullRefresh,
+		SupportedSyncModes: []kankuro.SyncMode{
+			kankuro.SyncModeFullRefresh,
 		},
 		SourceDefinedCursor: false,
 		Namespace:           "bitstrapped",
 	},
 		{
 			Name: "payments",
-			JSONSchema: airbyte.Properties{
-				Properties: map[airbyte.PropertyName]airbyte.PropertySpec{
+			JSONSchema: kankuro.Properties{
+				Properties: map[kankuro.PropertyName]kankuro.PropertySpec{
 					"userid": {
-						PropertyType: airbyte.PropertyType{
-							Type:        []airbyte.PropType{airbyte.Integer, airbyte.Null},
-							AirbyteType: airbyte.BigInteger},
+						PropertyType: kankuro.PropertyType{
+							Type:        []kankuro.PropType{kankuro.Integer, kankuro.Null},
+							AirbyteType: kankuro.BigInteger},
 						Description: "user ID - see the big int",
 					},
 					"paymentAmount": {
-						PropertyType: airbyte.PropertyType{
-							Type: []airbyte.PropType{airbyte.Integer, airbyte.Null},
+						PropertyType: kankuro.PropertyType{
+							Type: []kankuro.PropType{kankuro.Integer, kankuro.Null},
 						},
 						Description: "payment amount",
 					},
 				},
 			},
-			SupportedSyncModes: []airbyte.SyncMode{
-				airbyte.SyncModeFullRefresh,
+			SupportedSyncModes: []kankuro.SyncMode{
+				kankuro.SyncModeFullRefresh,
 			},
 			SourceDefinedCursor: false,
 			Namespace:           "bitstrapped",
@@ -153,20 +153,20 @@ type Payment struct {
 	PaymentAmount int64 `json:"paymentAmount"`
 }
 
-func (h APISource) Read(sourceCfgPath string, prevStatePath string, configuredCat *airbyte.ConfiguredCatalog,
-	tracker airbyte.MessageTracker) error {
-	if err := tracker.Log(airbyte.LogLevelInfo, "Running read"); err != nil {
+func (h APISource) Read(sourceCfgPath string, prevStatePath string, configuredCat *kankuro.ConfiguredCatalog,
+	tracker kankuro.MessageTracker) error {
+	if err := tracker.Log(kankuro.LogLevelInfo, "Running read"); err != nil {
 		return err
 	}
 	var src HTTPConfig
-	err := airbyte.UnmarshalFromPath(sourceCfgPath, &src)
+	err := kankuro.UnmarshalFromPath(sourceCfgPath, &src)
 	if err != nil {
 		return err
 	}
 
 	// see if there is a last sync
 	var st LastSyncTime
-	_ = airbyte.UnmarshalFromPath(sourceCfgPath, &st)
+	_ = kankuro.UnmarshalFromPath(sourceCfgPath, &st)
 	if st.Timestamp <= 0 {
 		st.Timestamp = -1
 	}

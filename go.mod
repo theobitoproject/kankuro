@@ -1,3 +1,3 @@
-module github.com/bitstrapped/airbyte
+module github.com/theobitoproject/kankuro
 
 go 1.17
