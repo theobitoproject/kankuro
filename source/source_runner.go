@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/theobitoproject/kankuro/parsers"
 	"github.com/theobitoproject/kankuro/protocol"
 	"github.com/theobitoproject/kankuro/trackers"
 	"github.com/theobitoproject/kankuro/writers"
@@ -50,96 +49,113 @@ func NewSourceRunner(src Source, w io.Writer) SourceRunner {
 // 	 }
 //  }
 // Yes, it really is that easy!
-func (sr SourceRunner) Start() error {
+func (sr SourceRunner) Start() (err error) {
 	switch protocol.Cmd(os.Args[1]) {
 	case protocol.CmdSpec:
-		spec, err := sr.src.Spec(trackers.LogTracker{
-			Log: sr.msgTracker.Log,
-		})
-		if err != nil {
-			sr.msgTracker.Log(protocol.LogLevelError, "failed"+err.Error())
-			return err
-		}
-		return protocol.Write(sr.w, &protocol.Message{
-			Type:                   protocol.MsgTypeSpec,
-			ConnectorSpecification: spec,
-		})
+		err = sr.spec()
 
 	case protocol.CmdCheck:
-		inP, err := parsers.GetSourceConfigPath()
-		if err != nil {
-			return err
-		}
-		err = sr.src.Check(inP, trackers.LogTracker{
-			Log: sr.msgTracker.Log,
-		})
-		if err != nil {
-			log.Println(err)
-			return protocol.Write(sr.w, &protocol.Message{
-				Type: protocol.MsgTypeConnectionStat,
-				ConnectionStatus: &protocol.ConnectionStatus{
-					Status: protocol.CheckStatusFailed,
-				},
-			})
-		}
+		err = sr.check()
 
+	case protocol.CmdDiscover:
+		err = sr.discover()
+
+	case protocol.CmdRead:
+		err = sr.read()
+	}
+
+	return err
+}
+
+func (sr SourceRunner) spec() error {
+	spec, err := sr.src.Spec(trackers.LogTracker{
+		Log: sr.msgTracker.Log,
+	})
+	if err != nil {
+		sr.msgTracker.Log(protocol.LogLevelError, "failed"+err.Error())
+		return err
+	}
+
+	return protocol.Write(sr.w, &protocol.Message{
+		Type:                   protocol.MsgTypeSpec,
+		ConnectorSpecification: spec,
+	})
+}
+
+func (sr SourceRunner) check() error {
+	inP, err := protocol.GetSourceConfigPath()
+	if err != nil {
+		return err
+	}
+
+	err = sr.src.Check(inP, trackers.LogTracker{
+		Log: sr.msgTracker.Log,
+	})
+	if err != nil {
+		log.Println(err)
 		return protocol.Write(sr.w, &protocol.Message{
 			Type: protocol.MsgTypeConnectionStat,
 			ConnectionStatus: &protocol.ConnectionStatus{
-				Status: protocol.CheckStatusSuccess,
+				Status: protocol.CheckStatusFailed,
 			},
 		})
-
-	case protocol.CmdDiscover:
-		inP, err := parsers.GetSourceConfigPath()
-		if err != nil {
-			return err
-		}
-		ct, err := sr.src.Discover(inP, trackers.LogTracker{
-			Log: sr.msgTracker.Log},
-		)
-		if err != nil {
-			return err
-		}
-		return protocol.Write(sr.w, &protocol.Message{
-			Type:    protocol.MsgTypeCatalog,
-			Catalog: ct,
-		})
-
-	case protocol.CmdRead:
-		var incat protocol.ConfiguredCatalog
-		p, err := parsers.GetCatalogPath()
-		if err != nil {
-			return err
-		}
-
-		err = parsers.UnmarshalFromPath(p, &incat)
-		if err != nil {
-			return err
-		}
-
-		srp, err := parsers.GetSourceConfigPath()
-		if err != nil {
-			return err
-		}
-
-		stp, err := parsers.GetStatePath()
-		if err != nil {
-			return err
-		}
-
-		err = sr.src.Read(srp, stp, &incat, sr.msgTracker)
-		if err != nil {
-			return err
-		}
-
-		err = sr.msgTracker.State(&lastSyncTime{
-			Timestamp: time.Now().UnixMilli(),
-		})
-		if err != nil {
-			return err
-		}
 	}
 
-	return nil
+	return protocol.Write(sr.w, &protocol.Message{
+		Type: protocol.MsgTypeConnectionStat,
+		ConnectionStatus: &protocol.ConnectionStatus{
+			Status: protocol.CheckStatusSuccess,
+		},
+	})
+}
+
+func (sr SourceRunner) discover() error {
+	inP, err := protocol.GetSourceConfigPath()
+	if err != nil {
+		return err
+	}
+
+	ct, err := sr.src.Discover(inP, trackers.LogTracker{
+		Log: sr.msgTracker.Log},
+	)
+	if err != nil {
+		return err
+	}
+
+	return protocol.Write(sr.w, &protocol.Message{
+		Type:    protocol.MsgTypeCatalog,
+		Catalog: ct,
+	})
+}
+
+func (sr SourceRunner) read() error {
+	var incat protocol.ConfiguredCatalog
+	p, err := protocol.GetCatalogPath()
+	if err != nil {
+		return err
+	}
+
+	err = protocol.UnmarshalFromPath(p, &incat)
+	if err != nil {
+		return err
+	}
+
+	srp, err := protocol.GetSourceConfigPath()
+	if err != nil {
+		return err
+	}
+
+	stp, err := protocol.GetStatePath()
+	if err != nil {
+		return err
+	}
+
+	err = sr.src.Read(srp, stp, &incat, sr.msgTracker)
+	if err != nil {
+		return err
+	}
+
+	return sr.msgTracker.State(&lastSyncTime{
+		Timestamp: time.Now().UnixMilli(),
+	})
 }
