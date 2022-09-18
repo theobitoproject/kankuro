@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"time"
 )
 
 // SourceRunner acts as an "orchestrator" of sorts to run your source for you
@@ -11,6 +12,10 @@ type SourceRunner struct {
 	w          io.Writer
 	src        Source
 	msgTracker MessageTracker
+}
+
+type lastSyncTime struct {
+	Timestamp int64 `json:"timestamp"`
 }
 
 // NewSourceRunner takes your defined Source and plugs it in with the rest of airbyte
@@ -120,10 +125,15 @@ func (sr SourceRunner) Start() error {
 
 		err = sr.src.Read(srp, stp, &incat, sr.msgTracker)
 		if err != nil {
-			log.Println("failed")
 			return err
 		}
 
+		err = sr.msgTracker.State(&lastSyncTime{
+			Timestamp: time.Now().UnixMilli(),
+		})
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

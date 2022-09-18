@@ -16,7 +16,7 @@ type Source interface {
 	// returning an error from this will cancel the sync and returning a nil
 	// from this will successfully end the sync
 	Read(
-		sourceCfgPath string,
+		srcCfgPath string,
 		prevStatePath string,
 		configuredCat *ConfiguredCatalog,
 		tracker MessageTracker,
