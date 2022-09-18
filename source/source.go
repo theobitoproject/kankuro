@@ -1,13 +1,18 @@
-package kankuro
+package source
+
+import (
+	"github.com/theobitoproject/kankuro/protocol"
+	"github.com/theobitoproject/kankuro/trackers"
+)
 
 // Source is the only interface you need to define to create your source!
 type Source interface {
 	// Spec returns the input "form" spec needed for your source
-	Spec(logTracker LogTracker) (*ConnectorSpecification, error)
+	Spec(logTracker trackers.LogTracker) (*protocol.ConnectorSpecification, error)
 	// Check verifies the source - usually verify creds/connection etc.
-	Check(srcCfgPath string, logTracker LogTracker) error
+	Check(srcCfgPath string, logTracker trackers.LogTracker) error
 	// Discover returns the schema of the data you want to sync
-	Discover(srcConfigPath string, logTracker LogTracker) (*Catalog, error)
+	Discover(srcConfigPath string, logTracker trackers.LogTracker) (*protocol.Catalog, error)
 	// Read will read the actual data from your source and use
 	// tracker.Record(), tracker.State() and tracker.Log() to sync data
 	// with airbyte/destinations
@@ -18,7 +23,7 @@ type Source interface {
 	Read(
 		srcCfgPath string,
 		prevStatePath string,
-		configuredCat *ConfiguredCatalog,
-		tracker MessageTracker,
+		configuredCat *protocol.ConfiguredCatalog,
+		tracker trackers.MessageTracker,
 	) error
 }

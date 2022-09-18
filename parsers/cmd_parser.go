@@ -1,4 +1,4 @@
-package kankuro
+package parsers
 
 import (
 	"encoding/json"
@@ -7,14 +7,18 @@ import (
 	"os"
 )
 
-func getSourceConfigPath() (string, error) {
+// GetSourceConfigPath returns the source config path
+// from the commmand used to run the connector
+func GetSourceConfigPath() (string, error) {
 	if os.Args[2] != "--config" {
 		return "", fmt.Errorf("expect --config")
 	}
 	return os.Args[3], nil
 }
 
-func getStatePath() (string, error) {
+// GetStatePath returns the state path
+// from the commmand used to run the connector
+func GetStatePath() (string, error) {
 	if len(os.Args) <= 6 {
 		return "", nil
 	}
@@ -24,7 +28,9 @@ func getStatePath() (string, error) {
 	return os.Args[7], nil
 }
 
-func getCatalogPath() (string, error) {
+// GetCatalogPath returns the catalog path
+// from the commmand used to run the connector
+func GetCatalogPath() (string, error) {
 	if os.Args[4] != "--catalog" {
 		return "", fmt.Errorf("expect --catalog")
 	}
