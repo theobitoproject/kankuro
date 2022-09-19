@@ -6,7 +6,7 @@ import "io"
 // This PrivateMessenger should NOT be available for the connector implementations
 type PrivateMessenger interface {
 	// WriteConnectionStat writes a connection check status
-	WriteConnectionStat(status checkStatus) error
+	WriteConnectionStat(status CheckStatus) error
 	// WriteLog writes a catalog
 	WriteCatalog(catalog *Catalog) error
 	// WriteLog writes a connector specification
@@ -23,7 +23,7 @@ func NewPrivateMessenger(writer io.Writer) PrivateMessenger {
 }
 
 // WriteConnectionStat writes a connection check status
-func (pm privateMessenger) WriteConnectionStat(status checkStatus) error {
+func (pm privateMessenger) WriteConnectionStat(status CheckStatus) error {
 	return write(pm.writer, &Message{
 		Type: msgTypeConnectionStat,
 		ConnectionStatus: &connectionStatus{

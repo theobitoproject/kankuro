@@ -16,3 +16,8 @@ const (
 
 // Cmd defines the specific name of the command run for the connector
 type Cmd string
+
+// IsZero if the instance is empty
+func (c *Cmd) IsZero() bool {
+	return *c == ""
+}
