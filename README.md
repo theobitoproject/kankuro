@@ -6,6 +6,14 @@ Words extracted from base package:
 >This package abstracts away much of the "protocol" away from the user and lets them focus on biz logic
 It focuses on developer efficiency and tries to be strongly typed as much as possible to help dev's move fast without mistakes.
 
+<div style="width: 320px;">
+
+![Kankuro](kankuro.jpg)
+
+</div>
+
+> Sasori...your strength came because of your soul, not in spite of it. You tried to erase it, to become a puppet yourself, but couldn't change completely. Now you've got your immortal body, but you've fallen, sunk to the level of the puppets you used to control. You were supposed to be a top class ninja puppeteer, not a worthless nobody who lets someone else pull the strings.
+
 ## Installation 
 
 ```
