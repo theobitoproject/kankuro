@@ -1,25 +1,18 @@
-# Airbyte - Golang SDK/CDK
+# kankuro
 
-This package aims to help developers build connectors (sources/destinations) really fast in Go. 
-The focus of this package is developer efficiency. It focusses on letting developers focus more on connector business logic instead of airbyte protocol knowledge. 
+**Kankuro** is built on top of the Airbyte go-sdk/cdk built by bitstrapped (https://github.com/bitstrapped/airbyte) and it is meant to help build connectors quickly in go
+
+Words extracted from base package:
+>This package abstracts away much of the "protocol" away from the user and lets them focus on biz logic
+It focuses on developer efficiency and tries to be strongly typed as much as possible to help dev's move fast without mistakes.
 
 ## Installation 
 
 ```
-go get github.com/bitstrapped/airbyte
+go get github.com/theobitoproject/kankuro
 ```
 
-## Docs
-
-- View the godoc's here: https://pkg.go.dev/github.com/bitstrapped/airbyte
-
-
 ## Usage 
-
-### By Example
-
-1. The fastest way to get started it to look at the full example in `examples/httpsource` or the Example in the godoc
-
 
 ### Detailed Usage
 
@@ -29,16 +22,32 @@ go get github.com/bitstrapped/airbyte
 // Source is the only interface you need to define to create your source!
 type Source interface {
 	// Spec returns the input "form" spec needed for your source
-	Spec(logTracker LogTracker) (*ConnectorSpecification, error)
+	Spec(
+		messenger protocol.Messenger,
+		configParser protocol.ConfigParser,
+	) (*protocol.ConnectorSpecification, error)
 	// Check verifies the source - usually verify creds/connection etc.
-	Check(srcCfgPath string, logTracker LogTracker) error
+	Check(
+		messenger protocol.Messenger,
+		configParser protocol.ConfigParser,
+	) error
 	// Discover returns the schema of the data you want to sync
-	Discover(srcConfigPath string, logTracker LogTracker) (*Catalog, error)
-	// Read will read the actual data from your source and use tracker.Record(), tracker.State() and tracker.Log() to sync data with airbyte/destinations
-	// MessageTracker is thread-safe and so it is completely find to spin off goroutines to sync your data (just don't forget your waitgroups :))
-	// returning an error from this will cancel the sync and returning a nil from this will successfully end the sync
-	Read(sourceCfgPath string, prevStatePath string, configuredCat *ConfiguredCatalog,
-		tracker MessageTracker) error
+	Discover(
+		messenger protocol.Messenger,
+		configParser protocol.ConfigParser,
+	) (*protocol.Catalog, error)
+	// Read will read the actual data from your source and use
+	// tracker.Record(), tracker.State() and tracker.Log() to sync data
+	// with airbyte/destinations
+	// MessageTracker is thread-safe and so it is completely find to
+	// spin off goroutines to sync your data (just don't forget your waitgroups :))
+	// returning an error from this will cancel the sync and returning a nil
+	// from this will successfully end the sync
+	Read(
+		configuredCat *protocol.ConfiguredCatalog,
+		messenger protocol.Messenger,
+		configParser protocol.ConfigParser,
+	) error
 }
 ```
 
@@ -47,7 +56,7 @@ type Source interface {
 ```go
 func main() {
 	fsrc := filesource.NewFileSource("foobar.txt")
-	runner := airbyte.NewSourceRunner(fsrc)
+	runner := kankuro.NewSourceRunner(fsrc)
 	err := runner.Start()
 	if err != nil {
 		log.Fatal(err)
@@ -72,8 +81,8 @@ LABEL io.airbyte.name=airbyte/source
 ENTRYPOINT ["/base/app"]
 ```
 
-4. Push to your docker repository and profit! 
+Check the [Random API source example](https://github.com/theobitoproject/airbyte_source_random_api) for a better usage example
 
-### Contributors 
+### Contributors
 
-- We'd like to give a shoutout and thank you to @ajzo90 and his initial work on https://github.com/ajzo90/airbyte-http-connector. @ajzo90's project inspired this project
+I really thank [Bitstrapped connector](https://github.com/bitstrapped/airbyte) and contributors since this connector is inspired on their work
