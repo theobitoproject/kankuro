@@ -1,7 +1,6 @@
 package source
 
 import (
-	"os"
 	"time"
 
 	"github.com/theobitoproject/kankuro/protocol"
@@ -12,6 +11,7 @@ type SourceRunner struct {
 	src              Source
 	messenger        protocol.Messenger
 	privateMessenger protocol.PrivateMessenger
+	commandParser    protocol.CommandParser
 }
 
 type lastSyncTime struct {
@@ -23,11 +23,13 @@ func NewSourceRunner(
 	src Source,
 	messenger protocol.Messenger,
 	privateMessenger protocol.PrivateMessenger,
+	commandParser protocol.CommandParser,
 ) SourceRunner {
 	return SourceRunner{
 		src,
 		messenger,
 		privateMessenger,
+		commandParser,
 	}
 }
 
@@ -44,7 +46,12 @@ func NewSourceRunner(
 //  }
 // Yes, it really is that easy!
 func (sr SourceRunner) Start() (err error) {
-	switch protocol.Cmd(os.Args[1]) {
+	mainCmd, err := sr.commandParser.GetMainCommand()
+	if err != nil {
+		return err
+	}
+
+	switch mainCmd {
 	case protocol.CmdSpec:
 		err = sr.spec()
 
@@ -72,7 +79,7 @@ func (sr SourceRunner) spec() error {
 }
 
 func (sr SourceRunner) check() error {
-	inP, err := protocol.GetSourceConfigPath()
+	inP, err := sr.commandParser.GetSourceConfigPath()
 	if err != nil {
 		return err
 	}
@@ -86,7 +93,7 @@ func (sr SourceRunner) check() error {
 }
 
 func (sr SourceRunner) discover() error {
-	inP, err := protocol.GetSourceConfigPath()
+	inP, err := sr.commandParser.GetSourceConfigPath()
 	if err != nil {
 		return err
 	}
@@ -101,22 +108,22 @@ func (sr SourceRunner) discover() error {
 
 func (sr SourceRunner) read() error {
 	var incat protocol.ConfiguredCatalog
-	p, err := protocol.GetCatalogPath()
+	p, err := sr.commandParser.GetCatalogPath()
 	if err != nil {
 		return err
 	}
 
-	err = protocol.UnmarshalFromPath(p, &incat)
+	err = sr.commandParser.UnmarshalFromPath(p, &incat)
 	if err != nil {
 		return err
 	}
 
-	srp, err := protocol.GetSourceConfigPath()
+	srp, err := sr.commandParser.GetSourceConfigPath()
 	if err != nil {
 		return err
 	}
 
-	stp, err := protocol.GetStatePath()
+	stp, err := sr.commandParser.GetStatePath()
 	if err != nil {
 		return err
 	}
