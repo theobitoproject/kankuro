@@ -11,7 +11,7 @@ type SourceRunner struct {
 	src              Source
 	messenger        protocol.Messenger
 	privateMessenger protocol.PrivateMessenger
-	commandParser    protocol.CommandParser
+	configParser     protocol.ConfigParser
 }
 
 type lastSyncTime struct {
@@ -23,13 +23,13 @@ func NewSourceRunner(
 	src Source,
 	messenger protocol.Messenger,
 	privateMessenger protocol.PrivateMessenger,
-	commandParser protocol.CommandParser,
+	configParser protocol.ConfigParser,
 ) SourceRunner {
 	return SourceRunner{
 		src,
 		messenger,
 		privateMessenger,
-		commandParser,
+		configParser,
 	}
 }
 
@@ -46,7 +46,7 @@ func NewSourceRunner(
 //  }
 // Yes, it really is that easy!
 func (sr SourceRunner) Start() (err error) {
-	mainCmd, err := sr.commandParser.GetMainCommand()
+	mainCmd, err := sr.configParser.GetMainCommand()
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (sr SourceRunner) Start() (err error) {
 }
 
 func (sr SourceRunner) spec() error {
-	spec, err := sr.src.Spec(sr.messenger)
+	spec, err := sr.src.Spec(sr.messenger, sr.configParser)
 	if err != nil {
 		sr.messenger.WriteLog(protocol.LogLevelError, "failed"+err.Error())
 		return err
@@ -79,12 +79,7 @@ func (sr SourceRunner) spec() error {
 }
 
 func (sr SourceRunner) check() error {
-	inP, err := sr.commandParser.GetSourceConfigPath()
-	if err != nil {
-		return err
-	}
-
-	err = sr.src.Check(inP, sr.messenger)
+	err := sr.src.Check(sr.messenger, sr.configParser)
 	if err != nil {
 		return sr.privateMessenger.WriteConnectionStat(protocol.CheckStatusFailed)
 	}
@@ -93,12 +88,7 @@ func (sr SourceRunner) check() error {
 }
 
 func (sr SourceRunner) discover() error {
-	inP, err := sr.commandParser.GetSourceConfigPath()
-	if err != nil {
-		return err
-	}
-
-	ct, err := sr.src.Discover(inP, sr.messenger)
+	ct, err := sr.src.Discover(sr.messenger, sr.configParser)
 	if err != nil {
 		return err
 	}
@@ -108,27 +98,13 @@ func (sr SourceRunner) discover() error {
 
 func (sr SourceRunner) read() error {
 	var incat protocol.ConfiguredCatalog
-	p, err := sr.commandParser.GetCatalogPath()
+
+	err := sr.configParser.UnmarshalCatalogPath(&incat)
 	if err != nil {
 		return err
 	}
 
-	err = sr.commandParser.UnmarshalFromPath(p, &incat)
-	if err != nil {
-		return err
-	}
-
-	srp, err := sr.commandParser.GetSourceConfigPath()
-	if err != nil {
-		return err
-	}
-
-	stp, err := sr.commandParser.GetStatePath()
-	if err != nil {
-		return err
-	}
-
-	err = sr.src.Read(srp, stp, &incat, sr.messenger)
+	err = sr.src.Read(&incat, sr.messenger, sr.configParser)
 	if err != nil {
 		return err
 	}
