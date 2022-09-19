@@ -1,7 +1,6 @@
 package source
 
 import (
-	"io"
 	"os"
 	"time"
 
@@ -20,13 +19,15 @@ type lastSyncTime struct {
 }
 
 // NewSourceRunner takes your defined Source and plugs it in with the rest of airbyte
-func NewSourceRunner(src Source, w io.Writer) SourceRunner {
-	w = newSafeWriter(w)
-
+func NewSourceRunner(
+	src Source,
+	messenger protocol.Messenger,
+	privateMessenger protocol.PrivateMessenger,
+) SourceRunner {
 	return SourceRunner{
-		src:              src,
-		messenger:        protocol.NewMessenger(w),
-		privateMessenger: protocol.NewPrivateMessenger(w),
+		src,
+		messenger,
+		privateMessenger,
 	}
 }
 
