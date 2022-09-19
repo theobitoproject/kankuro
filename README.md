@@ -14,6 +14,8 @@ It focuses on developer efficiency and tries to be strongly typed as much as pos
 
 > Sasori...your strength came because of your soul, not in spite of it. You tried to erase it, to become a puppet yourself, but couldn't change completely. Now you've got your immortal body, but you've fallen, sunk to the level of the puppets you used to control. You were supposed to be a top class ninja puppeteer, not a worthless nobody who lets someone else pull the strings.
 
+**Kankuro**, shinobi of Sunagakure, the second eldest of the Three Sand Siblings and talented puppeteer.
+
 ## Installation 
 
 ```
