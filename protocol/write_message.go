@@ -6,6 +6,6 @@ import (
 )
 
 // Write emits data outbound from your src/destination to airbyte workers
-func Write(w io.Writer, m *Message) error {
+func write(w io.Writer, m *Message) error {
 	return json.NewEncoder(w).Encode(m)
 }

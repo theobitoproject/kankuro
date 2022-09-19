@@ -2,20 +2,17 @@ package source
 
 import (
 	"io"
-	"log"
 	"os"
 	"time"
 
 	"github.com/theobitoproject/kankuro/protocol"
-	"github.com/theobitoproject/kankuro/trackers"
-	"github.com/theobitoproject/kankuro/writers"
 )
 
 // SourceRunner acts as an "orchestrator" of sorts to run your source for you
 type SourceRunner struct {
-	w          io.Writer
-	src        Source
-	msgTracker trackers.MessageTracker
+	src              Source
+	messenger        protocol.Messenger
+	privateMessenger protocol.PrivateMessenger
 }
 
 type lastSyncTime struct {
@@ -24,17 +21,12 @@ type lastSyncTime struct {
 
 // NewSourceRunner takes your defined Source and plugs it in with the rest of airbyte
 func NewSourceRunner(src Source, w io.Writer) SourceRunner {
-	w = writers.NewSafeWriter(w)
-	msgTracker := trackers.MessageTracker{
-		Record: protocol.NewRecordWriter(w),
-		State:  protocol.NewStateWriter(w),
-		Log:    protocol.NewLogWriter(w),
-	}
+	w = newSafeWriter(w)
 
 	return SourceRunner{
-		w:          w,
-		src:        src,
-		msgTracker: msgTracker,
+		src:              src,
+		messenger:        protocol.NewMessenger(w),
+		privateMessenger: protocol.NewPrivateMessenger(w),
 	}
 }
 
@@ -68,18 +60,13 @@ func (sr SourceRunner) Start() (err error) {
 }
 
 func (sr SourceRunner) spec() error {
-	spec, err := sr.src.Spec(trackers.LogTracker{
-		Log: sr.msgTracker.Log,
-	})
+	spec, err := sr.src.Spec(sr.messenger)
 	if err != nil {
-		sr.msgTracker.Log(protocol.LogLevelError, "failed"+err.Error())
+		sr.messenger.WriteLog(protocol.LogLevelError, "failed"+err.Error())
 		return err
 	}
 
-	return protocol.Write(sr.w, &protocol.Message{
-		Type:                   protocol.MsgTypeSpec,
-		ConnectorSpecification: spec,
-	})
+	return sr.privateMessenger.WriteSpec(spec)
 }
 
 func (sr SourceRunner) check() error {
@@ -88,25 +75,12 @@ func (sr SourceRunner) check() error {
 		return err
 	}
 
-	err = sr.src.Check(inP, trackers.LogTracker{
-		Log: sr.msgTracker.Log,
-	})
+	err = sr.src.Check(inP, sr.messenger)
 	if err != nil {
-		log.Println(err)
-		return protocol.Write(sr.w, &protocol.Message{
-			Type: protocol.MsgTypeConnectionStat,
-			ConnectionStatus: &protocol.ConnectionStatus{
-				Status: protocol.CheckStatusFailed,
-			},
-		})
+		return sr.privateMessenger.WriteConnectionStat(protocol.CheckStatusFailed)
 	}
 
-	return protocol.Write(sr.w, &protocol.Message{
-		Type: protocol.MsgTypeConnectionStat,
-		ConnectionStatus: &protocol.ConnectionStatus{
-			Status: protocol.CheckStatusSuccess,
-		},
-	})
+	return sr.privateMessenger.WriteConnectionStat(protocol.CheckStatusSuccess)
 }
 
 func (sr SourceRunner) discover() error {
@@ -115,17 +89,12 @@ func (sr SourceRunner) discover() error {
 		return err
 	}
 
-	ct, err := sr.src.Discover(inP, trackers.LogTracker{
-		Log: sr.msgTracker.Log},
-	)
+	ct, err := sr.src.Discover(inP, sr.messenger)
 	if err != nil {
 		return err
 	}
 
-	return protocol.Write(sr.w, &protocol.Message{
-		Type:    protocol.MsgTypeCatalog,
-		Catalog: ct,
-	})
+	return sr.privateMessenger.WriteCatalog(ct)
 }
 
 func (sr SourceRunner) read() error {
@@ -150,12 +119,12 @@ func (sr SourceRunner) read() error {
 		return err
 	}
 
-	err = sr.src.Read(srp, stp, &incat, sr.msgTracker)
+	err = sr.src.Read(srp, stp, &incat, sr.messenger)
 	if err != nil {
 		return err
 	}
 
-	return sr.msgTracker.State(&lastSyncTime{
+	return sr.messenger.WriteState(&lastSyncTime{
 		Timestamp: time.Now().UnixMilli(),
 	})
 }
