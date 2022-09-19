@@ -1,6 +1,7 @@
 package source
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/theobitoproject/kankuro/protocol"
@@ -25,6 +26,7 @@ func NewSourceRunner(
 	privateMessenger protocol.PrivateMessenger,
 	configParser protocol.ConfigParser,
 ) SourceRunner {
+	//  TODO: add checks to catch nil pointers
 	return SourceRunner{
 		src,
 		messenger,
@@ -37,8 +39,7 @@ func NewSourceRunner(
 // Example usage would look like this in your main.go
 //  func() main {
 // 	src := newCoolSource()
-//  writer := newWriter()
-// 	runner := airbyte.NewSourceRunner(src, writer)
+// 	runner := airbyte.NewSourceRunner(src, os.Stdout, os.Args)
 // 	err := runner.Start()
 // 	if err != nil {
 // 		log.Fatal(err)
@@ -49,6 +50,10 @@ func (sr SourceRunner) Start() (err error) {
 	mainCmd, err := sr.configParser.GetMainCommand()
 	if err != nil {
 		return err
+	}
+
+	if mainCmd.IsZero() {
+		return fmt.Errorf("main command is required")
 	}
 
 	switch mainCmd {
@@ -63,6 +68,9 @@ func (sr SourceRunner) Start() (err error) {
 
 	case protocol.CmdRead:
 		err = sr.read()
+
+	default:
+		err = fmt.Errorf("command not supported: %s", mainCmd)
 	}
 
 	return err
@@ -71,6 +79,7 @@ func (sr SourceRunner) Start() (err error) {
 func (sr SourceRunner) spec() error {
 	spec, err := sr.src.Spec(sr.messenger, sr.configParser)
 	if err != nil {
+		// TODO: handle error from sr.messenger.WriteLog
 		sr.messenger.WriteLog(protocol.LogLevelError, "failed"+err.Error())
 		return err
 	}
@@ -80,16 +89,20 @@ func (sr SourceRunner) spec() error {
 
 func (sr SourceRunner) check() error {
 	err := sr.src.Check(sr.messenger, sr.configParser)
+
+	checkStatus := protocol.CheckStatusSuccess
 	if err != nil {
-		return sr.privateMessenger.WriteConnectionStat(protocol.CheckStatusFailed)
+		// TODO: log error
+		checkStatus = protocol.CheckStatusFailed
 	}
 
-	return sr.privateMessenger.WriteConnectionStat(protocol.CheckStatusSuccess)
+	return sr.privateMessenger.WriteConnectionStat(checkStatus)
 }
 
 func (sr SourceRunner) discover() error {
 	ct, err := sr.src.Discover(sr.messenger, sr.configParser)
 	if err != nil {
+		// TODO: log error
 		return err
 	}
 
@@ -101,15 +114,22 @@ func (sr SourceRunner) read() error {
 
 	err := sr.configParser.UnmarshalCatalogPath(&incat)
 	if err != nil {
+		// TODO: log error
 		return err
 	}
 
 	err = sr.src.Read(&incat, sr.messenger, sr.configParser)
 	if err != nil {
+		// TODO: log error
 		return err
 	}
 
-	return sr.messenger.WriteState(&lastSyncTime{
+	currentLastSyncTime := getCurrentLastSyncTime()
+	return sr.messenger.WriteState(&currentLastSyncTime)
+}
+
+func getCurrentLastSyncTime() lastSyncTime {
+	return lastSyncTime{
 		Timestamp: time.Now().UnixMilli(),
-	})
+	}
 }
