@@ -34,7 +34,8 @@ func NewSourceRunner(src Source, w io.Writer) SourceRunner {
 // Example usage would look like this in your main.go
 //  func() main {
 // 	src := newCoolSource()
-// 	runner := airbyte.NewSourceRunner(src)
+//  writer := newWriter()
+// 	runner := airbyte.NewSourceRunner(src, writer)
 // 	err := runner.Start()
 // 	if err != nil {
 // 		log.Fatal(err)
