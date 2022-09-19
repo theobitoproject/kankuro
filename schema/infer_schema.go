@@ -1,4 +1,4 @@
-package kankuro
+package schema
 
 import (
 	"encoding/json"
@@ -6,14 +6,13 @@ import (
 	"reflect"
 
 	"github.com/theobitoproject/kankuro/protocol"
-	"github.com/theobitoproject/kankuro/schema"
 )
 
 // Infer schema translates golang structs to JSONSchema format
 func InferSchemaFromStruct(i interface{}, messenger protocol.Messenger) protocol.Properties {
 	var prop protocol.Properties
 
-	s, err := schema.Generate(reflect.TypeOf(i))
+	s, err := Generate(reflect.TypeOf(i))
 	if err != nil {
 		messenger.WriteLog(protocol.LogLevelError, fmt.Sprintf("generate schema error: %v", err))
 		return prop
