@@ -68,7 +68,7 @@ type Source interface {
 ```go
 func main() {
 	fsrc := filesource.NewFileSource("foobar.txt")
-	runner := kankuro.NewSourceRunner(fsrc)
+	runner := source.NewSafeSourceRunner(hsrc, os.Stdout, os.Args)
 	err := runner.Start()
 	if err != nil {
 		log.Fatal(err)
