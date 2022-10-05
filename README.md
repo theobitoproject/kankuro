@@ -1,5 +1,7 @@
 # kankuro
 
+**Kankuro** is the go-sdk/cdk to help build Airbyte connectors quickly in Golang.
+
 **Kankuro** is built on top of the Airbyte go-sdk/cdk built by bitstrapped (https://github.com/bitstrapped/airbyte) and it is meant to help build connectors quickly in go
 
 Words extracted from base package:
