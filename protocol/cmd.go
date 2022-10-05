@@ -10,8 +10,10 @@ const (
 	// CmdDiscover references discover command which declares the different streams of data
 	// that this connector can output
 	CmdDiscover Cmd = "discover"
-	// CmdSpec references read command which reads data from the underlying data source
+	// CmdRead references read command which reads data from the underlying data source
 	CmdRead Cmd = "read"
+	// CmdWrite references write command which writes data to the underlying destination
+	CmdWrite Cmd = "write"
 )
 
 // Cmd defines the specific name of the command run for the connector
