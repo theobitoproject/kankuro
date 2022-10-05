@@ -19,7 +19,12 @@ func NewDestinationRunner(
 	privateMessenger protocol.PrivateMessenger,
 	configParser protocol.ConfigParser,
 ) DestinationRunner {
-	return DestinationRunner{}
+	return DestinationRunner{
+		dst,
+		messenger,
+		privateMessenger,
+		configParser,
+	}
 }
 
 func (dr DestinationRunner) Start() (err error) {
