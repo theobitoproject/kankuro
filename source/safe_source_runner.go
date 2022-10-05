@@ -15,7 +15,7 @@ func NewSafeSourceRunner(src Source, writer io.Writer, args []string) SourceRunn
 	messenger := protocol.NewMessenger(safeWriter)
 	privateMessenger := protocol.NewPrivateMessenger(safeWriter)
 
-	commandParser := protocol.NewConfigParser(args)
+	configParser := protocol.NewConfigParser(args)
 
-	return NewSourceRunner(src, messenger, privateMessenger, commandParser)
+	return NewSourceRunner(src, messenger, privateMessenger, configParser)
 }
