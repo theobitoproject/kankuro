@@ -78,8 +78,21 @@ func (dr DestinationRunner) check() error {
 }
 
 func (dr DestinationRunner) write() error {
-	err := fmt.Errorf("hello hello write not implemented")
+	dr.messenger.WriteLog(protocol.LogLevelInfo, "writing from dst runner...")
 
-	dr.messenger.WriteLog(protocol.LogLevelError, err.Error())
-	return err
+	var incat protocol.ConfiguredCatalog
+
+	err := dr.configParser.UnmarshalCatalogPath(&incat)
+	if err != nil {
+		// TODO: log error
+		return err
+	}
+
+	err = dr.dst.Write(&incat, dr.messenger, dr.configParser)
+	if err != nil {
+		// TODO: log error
+		return err
+	}
+
+	return nil
 }
