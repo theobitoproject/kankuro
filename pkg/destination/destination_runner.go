@@ -3,26 +3,27 @@ package destination
 import (
 	"fmt"
 
-	"github.com/theobitoproject/kankuro/protocol"
+	"github.com/theobitoproject/kankuro/pkg/messenger"
+	"github.com/theobitoproject/kankuro/pkg/protocol"
 )
 
 type DestinationRunner struct {
-	dst              Destination
-	messenger        protocol.Messenger
-	privateMessenger protocol.PrivateMessenger
-	configParser     protocol.ConfigParser
+	dst          Destination
+	msgr         messenger.Messenger
+	prvtMsgr     messenger.PrivateMessenger
+	configParser messenger.ConfigParser
 }
 
 func NewDestinationRunner(
 	dst Destination,
-	messenger protocol.Messenger,
-	privateMessenger protocol.PrivateMessenger,
-	configParser protocol.ConfigParser,
+	msgr messenger.Messenger,
+	prvtMsgr messenger.PrivateMessenger,
+	configParser messenger.ConfigParser,
 ) DestinationRunner {
 	return DestinationRunner{
 		dst,
-		messenger,
-		privateMessenger,
+		msgr,
+		prvtMsgr,
 		configParser,
 	}
 }
@@ -55,18 +56,18 @@ func (dr DestinationRunner) Start() (err error) {
 }
 
 func (dr DestinationRunner) spec() error {
-	spec, err := dr.dst.Spec(dr.messenger, dr.configParser)
+	spec, err := dr.dst.Spec(dr.msgr, dr.configParser)
 	if err != nil {
-		// TODO: handle error from dr.messenger.WriteLog
-		dr.messenger.WriteLog(protocol.LogLevelError, "failed"+err.Error())
+		// TODO: handle error from dr.msgr.WriteLog
+		dr.msgr.WriteLog(protocol.LogLevelError, "failed"+err.Error())
 		return err
 	}
 
-	return dr.privateMessenger.WriteSpec(spec)
+	return dr.prvtMsgr.WriteSpec(&spec)
 }
 
 func (dr DestinationRunner) check() error {
-	err := dr.dst.Check(dr.messenger, dr.configParser)
+	err := dr.dst.Check(dr.msgr, dr.configParser)
 
 	checkStatus := protocol.CheckStatusSuccess
 	if err != nil {
@@ -74,11 +75,11 @@ func (dr DestinationRunner) check() error {
 		checkStatus = protocol.CheckStatusFailed
 	}
 
-	return dr.privateMessenger.WriteConnectionStat(checkStatus)
+	return dr.prvtMsgr.WriteConnectionStat(checkStatus)
 }
 
 func (dr DestinationRunner) write() error {
-	dr.messenger.WriteLog(protocol.LogLevelInfo, "writing from dst runner...")
+	dr.msgr.WriteLog(protocol.LogLevelInfo, "writing from dst runner...")
 
 	var incat protocol.ConfiguredCatalog
 
@@ -88,7 +89,7 @@ func (dr DestinationRunner) write() error {
 		return err
 	}
 
-	err = dr.dst.Write(&incat, dr.messenger, dr.configParser)
+	err = dr.dst.Write(&incat, dr.msgr, dr.configParser)
 	if err != nil {
 		// TODO: log error
 		return err

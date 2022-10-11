@@ -1,16 +1,18 @@
-package protocol
+package messenger
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+
+	"github.com/theobitoproject/kankuro/pkg/protocol"
 )
 
 // ConfigParser reads the command that runs connectors
 // and returns isolated parameters
 type ConfigParser interface {
 	// GetMainCommand returns the comand to run the connector (spec, check, discover, read)
-	GetMainCommand() (Cmd, error)
+	GetMainCommand() (protocol.Cmd, error)
 	// UnmarshalSourceConfigPath unmarshals source config json file into a struct
 	UnmarshalSourceConfigPath(v interface{}) error
 	// UnmarshalSourceConfigPath unmarshals state json file into a struct
@@ -25,52 +27,67 @@ type configParser struct {
 
 // NewConfigParser creates an instance of ConfigParser
 func NewConfigParser(args []string) ConfigParser {
-	return configParser{args}
+	return &configParser{args}
 }
 
 // GetMainCommand returns the comand to run the connector (spec, check, discover, read)
-func (cp configParser) GetMainCommand() (Cmd, error) {
+func (cp *configParser) GetMainCommand() (protocol.Cmd, error) {
 	if len(cp.args) <= 1 {
 		return "", fmt.Errorf("main command not found")
 	}
-	return Cmd(cp.args[1]), nil
+	return protocol.Cmd(cp.args[1]), nil
 }
 
 // UnmarshalSourceConfigPath unmarshals source config json file into a struct
-func (cp configParser) UnmarshalSourceConfigPath(v interface{}) error {
-	if cp.args[2] != "--config" {
-		return fmt.Errorf("expect --config")
+func (cp *configParser) UnmarshalSourceConfigPath(v interface{}) error {
+	path, err := cp.getFlagConfigValue(protocol.ConfigCmdFlag)
+	if err != nil {
+		return nil
 	}
-	return cp.unmarshalFromPath(cp.args[3], v)
+
+	return cp.unmarshalFromPath(path, v)
 }
 
 // UnmarshalStatePath unmarshals source config json file into a struct
-func (cp configParser) UnmarshalStatePath(v interface{}) error {
-	if len(cp.args) <= 6 {
+func (cp *configParser) UnmarshalStatePath(v interface{}) error {
+	path, err := cp.getFlagConfigValue(protocol.StateCmdFlag)
+	if err != nil {
 		return nil
 	}
-	if cp.args[6] != "--state" {
-		return fmt.Errorf("expect --state")
-	}
-	return cp.unmarshalFromPath(cp.args[7], v)
+
+	return cp.unmarshalFromPath(path, v)
 }
 
 // UnmarshalCatalogPath unmarshals source config json file into a struct
-func (cp configParser) UnmarshalCatalogPath(v interface{}) error {
-	if cp.args[4] != "--catalog" {
-		return fmt.Errorf("expect --catalog")
+func (cp *configParser) UnmarshalCatalogPath(v interface{}) error {
+	path, err := cp.getFlagConfigValue(protocol.CatalogCmdFlag)
+	if err != nil {
+		return nil
 	}
-	return cp.unmarshalFromPath(cp.args[5], v)
+
+	return cp.unmarshalFromPath(path, v)
 }
 
 // UnmarshalFromPath is used to unmarshal json files into respective struct's
 // this is most commonly used to unmarshal your State between
 // runs and also unmarshal SourceConfig's
-func (cp configParser) unmarshalFromPath(path string, v interface{}) error {
+func (cp *configParser) unmarshalFromPath(path string, v interface{}) error {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
 	return json.Unmarshal(b, v)
+}
+
+func (cp *configParser) getFlagConfigValue(flag protocol.CmdFlag) (string, error) {
+	for argIndex, argValue := range cp.args {
+		if argValue != string(flag) {
+			continue
+		}
+
+		return cp.args[argIndex+1], nil
+	}
+
+	return "", fmt.Errorf("flag was not found in arguments: %s", flag)
 }

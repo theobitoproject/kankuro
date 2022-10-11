@@ -8,7 +8,7 @@ const (
 )
 
 // ConnectionStatus defines the connection status object to define the state of the connector
-type connectionStatus struct {
+type ConnectionStatus struct {
 	Status CheckStatus `json:"status"`
 }
 

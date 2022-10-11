@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/theobitoproject/kankuro/protocol"
+	"github.com/theobitoproject/kankuro/pkg/messenger"
+	"github.com/theobitoproject/kankuro/pkg/protocol"
 )
 
 // Infer schema translates golang structs to JSONSchema format
-func InferSchemaFromStruct(i interface{}, messenger protocol.Messenger) protocol.Properties {
+func InferSchemaFromStruct(i interface{}, messenger messenger.Messenger) protocol.Properties {
 	var prop protocol.Properties
 
 	s, err := Generate(reflect.TypeOf(i))

@@ -6,9 +6,9 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/theobitoproject/kankuro/protocol"
-	protocolmocks "github.com/theobitoproject/kankuro/protocol/mocks"
-	sourcemocks "github.com/theobitoproject/kankuro/source/mocks"
+	messengermocks "github.com/theobitoproject/kankuro/pkg/messenger/mocks"
+	"github.com/theobitoproject/kankuro/pkg/protocol"
+	sourcemocks "github.com/theobitoproject/kankuro/pkg/source/mocks"
 )
 
 var _ = Describe("SourceRunner", func() {
@@ -17,9 +17,9 @@ var _ = Describe("SourceRunner", func() {
 
 	var mockSource *sourcemocks.MockSource
 
-	var mockMessenger *protocolmocks.MockMessenger
-	var mockPrivateMessenger *protocolmocks.MockPrivateMessenger
-	var mockConfigParser *protocolmocks.MockConfigParser
+	var mockMessenger *messengermocks.MockMessenger
+	var mockPrivateMessenger *messengermocks.MockPrivateMessenger
+	var mockConfigParser *messengermocks.MockConfigParser
 
 	var mockCtrl gomock.Controller
 
@@ -28,9 +28,9 @@ var _ = Describe("SourceRunner", func() {
 
 		mockSource = sourcemocks.NewMockSource(&mockCtrl)
 
-		mockMessenger = protocolmocks.NewMockMessenger(&mockCtrl)
-		mockPrivateMessenger = protocolmocks.NewMockPrivateMessenger(&mockCtrl)
-		mockConfigParser = protocolmocks.NewMockConfigParser(&mockCtrl)
+		mockMessenger = messengermocks.NewMockMessenger(&mockCtrl)
+		mockPrivateMessenger = messengermocks.NewMockPrivateMessenger(&mockCtrl)
+		mockConfigParser = messengermocks.NewMockConfigParser(&mockCtrl)
 
 		sourceRunner = NewSourceRunner(
 			mockSource,
@@ -139,6 +139,14 @@ var _ = Describe("SourceRunner", func() {
 									WriteSpec(mockConnectorSpecification).
 									Return(fmt.Errorf("error writing spec")).
 									Times(1)
+
+								mockMessenger.
+									EXPECT().
+									// TODO: expect WriteLog to be called with a string
+									// for the second parameter
+									WriteLog(protocol.LogLevelError, gomock.Any()).
+									Return(nil).
+									Times(1)
 							})
 
 							It("should return an error", func() {
@@ -178,6 +186,14 @@ var _ = Describe("SourceRunner", func() {
 								Check(mockMessenger, mockConfigParser).
 								Return(fmt.Errorf("error running source check")).
 								Times(1)
+
+							mockMessenger.
+								EXPECT().
+								// TODO: expect WriteLog to be called with a string
+								// for the second parameter
+								WriteLog(protocol.LogLevelError, gomock.Any()).
+								Return(nil).
+								Times(1)
 						})
 
 						Context("when writing connection stat fails", func() {
@@ -186,6 +202,14 @@ var _ = Describe("SourceRunner", func() {
 									EXPECT().
 									WriteConnectionStat(protocol.CheckStatusFailed).
 									Return(fmt.Errorf("error writing connection stat")).
+									Times(1)
+
+								mockMessenger.
+									EXPECT().
+									// TODO: expect WriteLog to be called with a string
+									// for the second parameter
+									WriteLog(protocol.LogLevelError, gomock.Any()).
+									Return(nil).
 									Times(1)
 							})
 
@@ -224,6 +248,14 @@ var _ = Describe("SourceRunner", func() {
 									EXPECT().
 									WriteConnectionStat(protocol.CheckStatusSuccess).
 									Return(fmt.Errorf("error writing connection stat")).
+									Times(1)
+
+								mockMessenger.
+									EXPECT().
+									// TODO: expect WriteLog to be called with a string
+									// for the second parameter
+									WriteLog(protocol.LogLevelError, gomock.Any()).
+									Return(nil).
 									Times(1)
 							})
 
@@ -267,6 +299,14 @@ var _ = Describe("SourceRunner", func() {
 									fmt.Errorf("error running source discover"),
 								).
 								Times(1)
+
+							mockMessenger.
+								EXPECT().
+								// TODO: expect WriteLog to be called with a string
+								// for the second parameter
+								WriteLog(protocol.LogLevelError, gomock.Any()).
+								Return(nil).
+								Times(1)
 						})
 
 						It("should return an error", func() {
@@ -303,6 +343,14 @@ var _ = Describe("SourceRunner", func() {
 									EXPECT().
 									WriteCatalog(mockCatalog).
 									Return(fmt.Errorf("error writing catalog")).
+									Times(1)
+
+								mockMessenger.
+									EXPECT().
+									// TODO: expect WriteLog to be called with a string
+									// for the second parameter
+									WriteLog(protocol.LogLevelError, gomock.Any()).
+									Return(nil).
 									Times(1)
 							})
 
@@ -345,6 +393,14 @@ var _ = Describe("SourceRunner", func() {
 								UnmarshalCatalogPath(&configuredCatalog).
 								Return(fmt.Errorf("error unmarshaling catalog path")).
 								Times(1)
+
+							mockMessenger.
+								EXPECT().
+								// TODO: expect WriteLog to be called with a string
+								// for the second parameter
+								WriteLog(protocol.LogLevelError, gomock.Any()).
+								Return(nil).
+								Times(1)
 						})
 
 						It("should return an error", func() {
@@ -381,6 +437,14 @@ var _ = Describe("SourceRunner", func() {
 									Read(&configuredCatalog, mockMessenger, mockConfigParser).
 									Return(fmt.Errorf("error running source read")).
 									Times(1)
+
+								mockMessenger.
+									EXPECT().
+									// TODO: expect WriteLog to be called with a string
+									// for the second parameter
+									WriteLog(protocol.LogLevelError, gomock.Any()).
+									Return(nil).
+									Times(1)
 							})
 
 							It("should return an error", func() {
@@ -389,44 +453,16 @@ var _ = Describe("SourceRunner", func() {
 						})
 
 						Context("when source read method succeeds", func() {
-							var currentLastSyncTime lastSyncTime
-
 							BeforeEach(func() {
 								mockSource.
 									EXPECT().
 									Read(&configuredCatalog, mockMessenger, mockConfigParser).
 									Return(nil).
 									Times(1)
-
-								currentLastSyncTime = getCurrentLastSyncTime()
 							})
 
-							Context("when writing state fails", func() {
-								BeforeEach(func() {
-									mockMessenger.
-										EXPECT().
-										WriteState(&currentLastSyncTime).
-										Return(fmt.Errorf("error writing state")).
-										Times(1)
-								})
-
-								It("should return an error", func() {
-									Expect(err).ToNot(BeNil())
-								})
-							})
-
-							Context("when writing state succeeds", func() {
-								BeforeEach(func() {
-									mockMessenger.
-										EXPECT().
-										WriteState(&currentLastSyncTime).
-										Return(nil).
-										Times(1)
-								})
-
-								It("should NOT return an error", func() {
-									Expect(err).To(BeNil())
-								})
+							It("should NOT return an error", func() {
+								Expect(err).To(BeNil())
 							})
 						})
 					})

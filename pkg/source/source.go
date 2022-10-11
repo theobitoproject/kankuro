@@ -1,25 +1,26 @@
 package source
 
 import (
-	"github.com/theobitoproject/kankuro/protocol"
+	"github.com/theobitoproject/kankuro/pkg/messenger"
+	"github.com/theobitoproject/kankuro/pkg/protocol"
 )
 
 // Source is the only interface you need to define to create your source!
 type Source interface {
 	// Spec returns the input "form" spec needed for your source
 	Spec(
-		messenger protocol.Messenger,
-		configParser protocol.ConfigParser,
+		msgr messenger.Messenger,
+		configParser messenger.ConfigParser,
 	) (*protocol.ConnectorSpecification, error)
 	// Check verifies the source - usually verify creds/connection etc.
 	Check(
-		messenger protocol.Messenger,
-		configParser protocol.ConfigParser,
+		msgr messenger.Messenger,
+		configParser messenger.ConfigParser,
 	) error
 	// Discover returns the schema of the data you want to sync
 	Discover(
-		messenger protocol.Messenger,
-		configParser protocol.ConfigParser,
+		msgr messenger.Messenger,
+		configParser messenger.ConfigParser,
 	) (*protocol.Catalog, error)
 	// Read will read the actual data from your source and use
 	// tracker.Record(), tracker.State() and tracker.Log() to sync data
@@ -30,7 +31,7 @@ type Source interface {
 	// from this will successfully end the sync
 	Read(
 		configuredCat *protocol.ConfiguredCatalog,
-		messenger protocol.Messenger,
-		configParser protocol.ConfigParser,
+		msgr messenger.Messenger,
+		configParser messenger.ConfigParser,
 	) error
 }
