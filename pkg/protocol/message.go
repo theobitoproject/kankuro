@@ -7,7 +7,8 @@ import (
 
 // Message is a wrapper for the output of each method in actor interface
 type Message interface {
-	MarshalJSON() ([]byte, error)
+	// MarshalMessage returns the JSON encoding of the message
+	MarshalMessage() ([]byte, error)
 }
 
 type message struct {
@@ -92,7 +93,7 @@ func NewCatalogMessage(catalog *Catalog) (Message, error) {
 	}, nil
 }
 
-// message MarshalJSON is a custom marshaller which validates the messageType with the sub-struct
-func (m *message) MarshalJSON() ([]byte, error) {
+// MarshalMessage returns the JSON encoding of the message
+func (m *message) MarshalMessage() ([]byte, error) {
 	return json.Marshal(m)
 }
