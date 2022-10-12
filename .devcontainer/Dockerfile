@@ -17,7 +17,7 @@ RUN if [ "${NODE_VERSION}" != "none" ]; then su vscode -c "umask 0002 && . /usr/
 # RUN go get -x <your-dependency-or-tool>
 USER vscode
 RUN go install github.com/golang/mock/mockgen@v1.6.0
-RUN go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo@latest
+RUN go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo@v2.2.0
 
 # [Optional] Uncomment this line to install global node packages.
 # RUN su vscode -c "source /usr/local/share/nvm/nvm.sh && npm install -g <your-package-here>" 2>&1
