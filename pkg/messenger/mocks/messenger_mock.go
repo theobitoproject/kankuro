@@ -48,20 +48,6 @@ func (mr *MockMessengerMockRecorder) WriteLog(logLevel, logMessage interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteLog", reflect.TypeOf((*MockMessenger)(nil).WriteLog), logLevel, logMessage)
 }
 
-// WriteRecord mocks base method.
-func (m *MockMessenger) WriteRecord(recordData *protocol.RecordData, stream, namespace string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WriteRecord", recordData, stream, namespace)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// WriteRecord indicates an expected call of WriteRecord.
-func (mr *MockMessengerMockRecorder) WriteRecord(recordData, stream, namespace interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteRecord", reflect.TypeOf((*MockMessenger)(nil).WriteRecord), recordData, stream, namespace)
-}
-
 // WriteState mocks base method.
 func (m *MockMessenger) WriteState(stateData *protocol.StateData) error {
 	m.ctrl.T.Helper()

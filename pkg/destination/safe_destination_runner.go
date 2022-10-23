@@ -15,8 +15,8 @@ func NewSafeDestinationRunner(dst Destination, writer io.Writer, args []string) 
 
 	timer := tools.NewTimer()
 
-	msgr := messenger.NewMessenger(safeWriter, timer)
-	prvtMsgr := messenger.NewPrivateMessenger(safeWriter)
+	msgr := messenger.NewMessenger(safeWriter)
+	prvtMsgr := messenger.NewPrivateMessenger(safeWriter, timer)
 
 	configParser := messenger.NewConfigParser(args)
 

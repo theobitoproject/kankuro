@@ -4,14 +4,11 @@ import (
 	"io"
 
 	"github.com/theobitoproject/kankuro/pkg/protocol"
-	"github.com/theobitoproject/kankuro/tools"
 )
 
 // Messenger defines an implementation to send messages
 // This Messenger should be available for the connector implementations
 type Messenger interface {
-	// WriteRecord writes a record
-	WriteRecord(recordData *protocol.RecordData, stream string, namespace string) error
 	// WriteState writes state information
 	WriteState(stateData *protocol.StateData) error
 	// WriteLog writes a log message
@@ -20,27 +17,11 @@ type Messenger interface {
 
 type messenger struct {
 	writer io.Writer
-	timer  tools.Timer
 }
 
 // NewMessenger creates a new instance of a Messenger
-func NewMessenger(writer io.Writer, timer tools.Timer) Messenger {
-	return &messenger{writer, timer}
-}
-
-// WriteRecord writes a record
-func (m *messenger) WriteRecord(recordData *protocol.RecordData, stream string, namespace string) error {
-	message, err := protocol.NewRecordMessage(&protocol.Record{
-		EmittedAt: m.timer.Now().UnixMilli(),
-		Data:      recordData,
-		Namespace: namespace,
-		Stream:    stream,
-	})
-	if err != nil {
-		return err
-	}
-
-	return write(m.writer, &message)
+func NewMessenger(writer io.Writer) Messenger {
+	return &messenger{writer}
 }
 
 // WriteState writes state information

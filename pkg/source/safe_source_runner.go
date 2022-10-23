@@ -15,11 +15,14 @@ func NewSafeSourceRunner(src Source, writer io.Writer, args []string) SourceRunn
 
 	timer := tools.NewTimer()
 
-	msgr := messenger.NewMessenger(safeWriter, timer)
+	msgr := messenger.NewMessenger(safeWriter)
 
-	prvtMsgr := messenger.NewPrivateMessenger(safeWriter)
+	prvtMsgr := messenger.NewPrivateMessenger(safeWriter, timer)
 
-	configParser := messenger.NewConfigParser(args)
+	cfgPsr := messenger.NewConfigParser(args)
 
-	return NewSourceRunner(src, msgr, prvtMsgr, configParser)
+	recordChan := messenger.NewRecordChannel()
+	errChan := messenger.NewErrorChannel()
+
+	return NewSourceRunner(src, msgr, prvtMsgr, cfgPsr, recordChan, errChan)
 }

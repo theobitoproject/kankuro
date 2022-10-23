@@ -36,59 +36,71 @@ func (m *MockSource) EXPECT() *MockSourceMockRecorder {
 }
 
 // Check mocks base method.
-func (m *MockSource) Check(msgr messenger.Messenger, configParser messenger.ConfigParser) error {
+func (m *MockSource) Check(msgr messenger.Messenger, cfgPsr messenger.ConfigParser) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Check", msgr, configParser)
+	ret := m.ctrl.Call(m, "Check", msgr, cfgPsr)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Check indicates an expected call of Check.
-func (mr *MockSourceMockRecorder) Check(msgr, configParser interface{}) *gomock.Call {
+func (mr *MockSourceMockRecorder) Check(msgr, cfgPsr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockSource)(nil).Check), msgr, configParser)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockSource)(nil).Check), msgr, cfgPsr)
+}
+
+// Close mocks base method.
+func (m *MockSource) Close(recChan messenger.RecordChannel, errChan messenger.ErrorChannel) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Close", recChan, errChan)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Close indicates an expected call of Close.
+func (mr *MockSourceMockRecorder) Close(recChan, errChan interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockSource)(nil).Close), recChan, errChan)
 }
 
 // Discover mocks base method.
-func (m *MockSource) Discover(msgr messenger.Messenger, configParser messenger.ConfigParser) (*protocol.Catalog, error) {
+func (m *MockSource) Discover(msgr messenger.Messenger, cfgPsr messenger.ConfigParser) (*protocol.Catalog, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Discover", msgr, configParser)
+	ret := m.ctrl.Call(m, "Discover", msgr, cfgPsr)
 	ret0, _ := ret[0].(*protocol.Catalog)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Discover indicates an expected call of Discover.
-func (mr *MockSourceMockRecorder) Discover(msgr, configParser interface{}) *gomock.Call {
+func (mr *MockSourceMockRecorder) Discover(msgr, cfgPsr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Discover", reflect.TypeOf((*MockSource)(nil).Discover), msgr, configParser)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Discover", reflect.TypeOf((*MockSource)(nil).Discover), msgr, cfgPsr)
 }
 
 // Read mocks base method.
-func (m *MockSource) Read(configuredCat *protocol.ConfiguredCatalog, msgr messenger.Messenger, configParser messenger.ConfigParser) error {
+func (m *MockSource) Read(cfgdCtg *protocol.ConfiguredCatalog, msgr messenger.Messenger, cfgPsr messenger.ConfigParser, recChan messenger.RecordChannel, errChan messenger.ErrorChannel) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Read", configuredCat, msgr, configParser)
-	ret0, _ := ret[0].(error)
-	return ret0
+	m.ctrl.Call(m, "Read", cfgdCtg, msgr, cfgPsr, recChan, errChan)
 }
 
 // Read indicates an expected call of Read.
-func (mr *MockSourceMockRecorder) Read(configuredCat, msgr, configParser interface{}) *gomock.Call {
+func (mr *MockSourceMockRecorder) Read(cfgdCtg, msgr, cfgPsr, recChan, errChan interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockSource)(nil).Read), configuredCat, msgr, configParser)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockSource)(nil).Read), cfgdCtg, msgr, cfgPsr, recChan, errChan)
 }
 
 // Spec mocks base method.
-func (m *MockSource) Spec(msgr messenger.Messenger, configParser messenger.ConfigParser) (*protocol.ConnectorSpecification, error) {
+func (m *MockSource) Spec(msgr messenger.Messenger, cfgPsr messenger.ConfigParser) (*protocol.ConnectorSpecification, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Spec", msgr, configParser)
+	ret := m.ctrl.Call(m, "Spec", msgr, cfgPsr)
 	ret0, _ := ret[0].(*protocol.ConnectorSpecification)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Spec indicates an expected call of Spec.
-func (mr *MockSourceMockRecorder) Spec(msgr, configParser interface{}) *gomock.Call {
+func (mr *MockSourceMockRecorder) Spec(msgr, cfgPsr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Spec", reflect.TypeOf((*MockSource)(nil).Spec), msgr, configParser)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Spec", reflect.TypeOf((*MockSource)(nil).Spec), msgr, cfgPsr)
 }

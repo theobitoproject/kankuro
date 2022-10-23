@@ -62,6 +62,20 @@ func (mr *MockPrivateMessengerMockRecorder) WriteConnectionStat(status interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteConnectionStat", reflect.TypeOf((*MockPrivateMessenger)(nil).WriteConnectionStat), status)
 }
 
+// WriteRecord mocks base method.
+func (m *MockPrivateMessenger) WriteRecord(record *protocol.Record) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WriteRecord", record)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WriteRecord indicates an expected call of WriteRecord.
+func (mr *MockPrivateMessengerMockRecorder) WriteRecord(record interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteRecord", reflect.TypeOf((*MockPrivateMessenger)(nil).WriteRecord), record)
+}
+
 // WriteSpec mocks base method.
 func (m *MockPrivateMessenger) WriteSpec(connectorSpecification *protocol.ConnectorSpecification) error {
 	m.ctrl.T.Helper()

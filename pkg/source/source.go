@@ -5,33 +5,36 @@ import (
 	"github.com/theobitoproject/kankuro/pkg/protocol"
 )
 
-// Source is the only interface you need to define to create your source!
+// Source defines a connector to extract data
 type Source interface {
-	// Spec returns the input "form" spec needed for your source
+	// Spec returns the schema which described how the source connector can be configured
 	Spec(
 		msgr messenger.Messenger,
-		configParser messenger.ConfigParser,
+		cfgPsr messenger.ConfigParser,
 	) (*protocol.ConnectorSpecification, error)
-	// Check verifies the source - usually verify creds/connection etc.
+	// Check verifies that, given a configuration, data can be accessed properly
 	Check(
 		msgr messenger.Messenger,
-		configParser messenger.ConfigParser,
+		cfgPsr messenger.ConfigParser,
 	) error
-	// Discover returns the schema of the data you want to sync
+	// Discover returns the schema which describes the structure of the data
+	// that can be extracted from the source
 	Discover(
 		msgr messenger.Messenger,
-		configParser messenger.ConfigParser,
+		cfgPsr messenger.ConfigParser,
 	) (*protocol.Catalog, error)
-	// Read will read the actual data from your source and use
-	// tracker.Record(), tracker.State() and tracker.Log() to sync data
-	// with airbyte/destinations
-	// MessageTracker is thread-safe and so it is completely find to
-	// spin off goroutines to sync your data (just don't forget your waitgroups :))
-	// returning an error from this will cancel the sync and returning a nil
-	// from this will successfully end the sync
+	// Read fetches data from the source and
+	// communicates all records to the record channel
 	Read(
-		configuredCat *protocol.ConfiguredCatalog,
+		cfgdCtg *protocol.ConfiguredCatalog,
 		msgr messenger.Messenger,
-		configParser messenger.ConfigParser,
+		cfgPsr messenger.ConfigParser,
+		recChan messenger.RecordChannel,
+		errChan messenger.ErrorChannel,
+	)
+	// Close performs any final actions to close and finish the process
+	Close(
+		recChan messenger.RecordChannel,
+		errChan messenger.ErrorChannel,
 	) error
 }

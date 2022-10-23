@@ -3,7 +3,7 @@ package messenger
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/theobitoproject/kankuro/pkg/protocol"
 )
@@ -72,7 +72,7 @@ func (cp *configParser) UnmarshalCatalogPath(v interface{}) error {
 // this is most commonly used to unmarshal your State between
 // runs and also unmarshal SourceConfig's
 func (cp *configParser) unmarshalFromPath(path string, v interface{}) error {
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}

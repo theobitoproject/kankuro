@@ -8,5 +8,5 @@ type Record struct {
 	Stream    string      `json:"stream"`
 }
 
-// RecordData defines the data of the record
+// RecordData defines the data of a "data point"
 type RecordData map[string]interface{}
