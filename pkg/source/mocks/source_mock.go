@@ -50,17 +50,17 @@ func (mr *MockSourceMockRecorder) Check(msgr, cfgPsr interface{}) *gomock.Call {
 }
 
 // Close mocks base method.
-func (m *MockSource) Close(recChan messenger.RecordChannel, errChan messenger.ErrorChannel) error {
+func (m *MockSource) Close(chanHub messenger.ChannelHub) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Close", recChan, errChan)
+	ret := m.ctrl.Call(m, "Close", chanHub)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Close indicates an expected call of Close.
-func (mr *MockSourceMockRecorder) Close(recChan, errChan interface{}) *gomock.Call {
+func (mr *MockSourceMockRecorder) Close(chanHub interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockSource)(nil).Close), recChan, errChan)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockSource)(nil).Close), chanHub)
 }
 
 // Discover mocks base method.
@@ -79,15 +79,15 @@ func (mr *MockSourceMockRecorder) Discover(msgr, cfgPsr interface{}) *gomock.Cal
 }
 
 // Read mocks base method.
-func (m *MockSource) Read(cfgdCtg *protocol.ConfiguredCatalog, msgr messenger.Messenger, cfgPsr messenger.ConfigParser, recChan messenger.RecordChannel, errChan messenger.ErrorChannel) {
+func (m *MockSource) Read(cfgdCtg *protocol.ConfiguredCatalog, msgr messenger.Messenger, cfgPsr messenger.ConfigParser, chanHub messenger.ChannelHub) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Read", cfgdCtg, msgr, cfgPsr, recChan, errChan)
+	m.ctrl.Call(m, "Read", cfgdCtg, msgr, cfgPsr, chanHub)
 }
 
 // Read indicates an expected call of Read.
-func (mr *MockSourceMockRecorder) Read(cfgdCtg, msgr, cfgPsr, recChan, errChan interface{}) *gomock.Call {
+func (mr *MockSourceMockRecorder) Read(cfgdCtg, msgr, cfgPsr, chanHub interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockSource)(nil).Read), cfgdCtg, msgr, cfgPsr, recChan, errChan)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockSource)(nil).Read), cfgdCtg, msgr, cfgPsr, chanHub)
 }
 
 // Spec mocks base method.

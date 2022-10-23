@@ -18,8 +18,7 @@ type SourceRunner struct {
 
 	cfgPsr messenger.ConfigParser
 
-	recChan messenger.RecordChannel
-	errChan messenger.ErrorChannel
+	chanHub messenger.ChannelHub
 }
 
 // NewSourceRunner takes your defined Source and plugs it in with the rest of airbyte
@@ -28,8 +27,7 @@ func NewSourceRunner(
 	msgr messenger.Messenger,
 	prvtMsgr messenger.PrivateMessenger,
 	cfgPsr messenger.ConfigParser,
-	recChan messenger.RecordChannel,
-	errChan messenger.ErrorChannel,
+	chanHub messenger.ChannelHub,
 ) SourceRunner {
 	//  TODO: should checks be added to catch nil pointers?
 	return SourceRunner{
@@ -37,8 +35,7 @@ func NewSourceRunner(
 		msgr,
 		prvtMsgr,
 		cfgPsr,
-		recChan,
-		errChan,
+		chanHub,
 	}
 }
 
@@ -172,36 +169,37 @@ func (sr SourceRunner) read() error {
 		&incat,
 		sr.msgr,
 		sr.cfgPsr,
-		sr.recChan,
-		sr.errChan,
+		sr.chanHub,
 	)
 
 	for {
 		select {
 
+		case <-sr.chanHub.GetDoneChannel():
+			sr.src.Close(sr.chanHub)
+			sr.msgr.WriteLog(
+				protocol.LogLevelInfo,
+				"reading has finished",
+			)
+			return nil
+
 		// in case of any errors, log it and close all channels
-		case err = <-sr.errChan:
-			fmt.Println("cayo el error", err)
+		case err = <-sr.chanHub.GetErrorChannel():
 			sr.msgr.WriteLog(
 				protocol.LogLevelError,
 				fmt.Errorf("failed running source read: %v", err).Error(),
 			)
-			sr.src.Close(sr.recChan, sr.errChan)
+			sr.chanHub.GetDoneChannel() <- true
 			return err
 
-		case record := <-sr.recChan:
+		case record := <-sr.chanHub.GetRecordChannel():
 			err = sr.prvtMsgr.WriteRecord(record)
 			if err != nil {
-				sr.msgr.WriteLog(
-					protocol.LogLevelError,
-					fmt.Errorf("failed writing record: %v", err).Error(),
-				)
-				sr.src.Close(sr.recChan, sr.errChan)
+				sr.chanHub.GetErrorChannel() <- err
 				return err
 			}
 		}
 	}
-
 }
 
 func (sr *SourceRunner) printConfiguredCatalogOnFile() error {

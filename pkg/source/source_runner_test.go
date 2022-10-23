@@ -38,7 +38,6 @@ var _ = Describe("SourceRunner", func() {
 			mockPrivateMessenger,
 			mockConfigParser,
 			nil,
-			nil,
 		)
 	})
 
@@ -436,7 +435,7 @@ var _ = Describe("SourceRunner", func() {
 							BeforeEach(func() {
 								mockSource.
 									EXPECT().
-									Read(&configuredCatalog, mockMessenger, mockConfigParser, nil, nil).
+									Read(&configuredCatalog, mockMessenger, mockConfigParser, nil).
 									Return(fmt.Errorf("error running source read")).
 									Times(1)
 
@@ -458,7 +457,7 @@ var _ = Describe("SourceRunner", func() {
 							BeforeEach(func() {
 								mockSource.
 									EXPECT().
-									Read(&configuredCatalog, mockMessenger, mockConfigParser, nil, nil).
+									Read(&configuredCatalog, mockMessenger, mockConfigParser, nil).
 									Return(nil).
 									Times(1)
 							})

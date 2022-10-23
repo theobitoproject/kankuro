@@ -29,12 +29,8 @@ type Source interface {
 		cfgdCtg *protocol.ConfiguredCatalog,
 		msgr messenger.Messenger,
 		cfgPsr messenger.ConfigParser,
-		recChan messenger.RecordChannel,
-		errChan messenger.ErrorChannel,
+		chanHub messenger.ChannelHub,
 	)
 	// Close performs any final actions to close and finish the process
-	Close(
-		recChan messenger.RecordChannel,
-		errChan messenger.ErrorChannel,
-	) error
+	Close(chanHub messenger.ChannelHub) error
 }
