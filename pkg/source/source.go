@@ -25,12 +25,16 @@ type Source interface {
 	) (*protocol.Catalog, error)
 	// Read fetches data from the source and
 	// communicates all records to the record channel
+	// Note: To stop execution, do not use Close method inside the implementation
+	// Instead, send a value to the done channel (doneChannel <- true)
 	Read(
 		cfgdCtg *protocol.ConfiguredCatalog,
 		msgr messenger.Messenger,
 		cfgPsr messenger.ConfigParser,
 		chanHub messenger.ChannelHub,
 	)
-	// Close performs any final actions to close and finish the process
+	// Close performs any final actions to close and finish the process.
+	// Note: Do not use this method inside the implementation to stop any execution.
+	// Instead, send a value to the done channel (doneChannel <- true)
 	Close(chanHub messenger.ChannelHub) error
 }

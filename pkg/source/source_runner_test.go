@@ -2,10 +2,12 @@ package source
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/theobitoproject/kankuro/pkg/messenger"
 	messengermocks "github.com/theobitoproject/kankuro/pkg/messenger/mocks"
 	"github.com/theobitoproject/kankuro/pkg/protocol"
 	sourcemocks "github.com/theobitoproject/kankuro/pkg/source/mocks"
@@ -20,6 +22,7 @@ var _ = Describe("SourceRunner", func() {
 	var mockMessenger *messengermocks.MockMessenger
 	var mockPrivateMessenger *messengermocks.MockPrivateMessenger
 	var mockConfigParser *messengermocks.MockConfigParser
+	var mockChannelHub *messengermocks.MockChannelHub
 
 	var mockCtrl gomock.Controller
 
@@ -31,13 +34,14 @@ var _ = Describe("SourceRunner", func() {
 		mockMessenger = messengermocks.NewMockMessenger(&mockCtrl)
 		mockPrivateMessenger = messengermocks.NewMockPrivateMessenger(&mockCtrl)
 		mockConfigParser = messengermocks.NewMockConfigParser(&mockCtrl)
+		mockChannelHub = messengermocks.NewMockChannelHub(&mockCtrl)
 
 		sourceRunner = NewSourceRunner(
 			mockSource,
 			mockMessenger,
 			mockPrivateMessenger,
 			mockConfigParser,
-			nil,
+			mockChannelHub,
 		)
 	})
 
@@ -410,6 +414,10 @@ var _ = Describe("SourceRunner", func() {
 					})
 
 					Context("when unmarshaling catalog path succeeds", func() {
+						var recChan messenger.RecordChannel
+						var errChan messenger.ErrorChannel
+						var doneChan messenger.DoneChannel
+
 						BeforeEach(func() {
 							mockConfigParser.
 								EXPECT().
@@ -429,42 +437,94 @@ var _ = Describe("SourceRunner", func() {
 									return nil
 								}).
 								Times(1)
+
+							recChan = messenger.NewRecordChannel()
+							errChan = messenger.NewErrorChannel()
+							doneChan = messenger.NewDoneChannel()
+
+							mockChannelHub.
+								EXPECT().
+								GetRecordChannel().
+								Return(recChan).
+								AnyTimes()
+
+							mockChannelHub.
+								EXPECT().
+								GetErrorChannel().
+								Return(errChan).
+								AnyTimes()
+
+							mockChannelHub.
+								EXPECT().
+								GetDoneChannel().
+								Return(doneChan).
+								AnyTimes()
+
+							mockSource.
+								EXPECT().
+								Read(&configuredCatalog, mockMessenger, mockConfigParser, mockChannelHub).
+								Times(1)
 						})
 
-						Context("when source read method fails", func() {
+						Context("when done channel receives data", func() {
 							BeforeEach(func() {
-								mockSource.
-									EXPECT().
-									Read(&configuredCatalog, mockMessenger, mockConfigParser, nil).
-									Return(fmt.Errorf("error running source read")).
-									Times(1)
-
-								mockMessenger.
-									EXPECT().
-									// TODO: expect WriteLog to be called with a string
-									// for the second parameter
-									WriteLog(protocol.LogLevelError, gomock.Any()).
-									Return(nil).
-									Times(1)
+								go func() {
+									time.Sleep(100 * time.Millisecond)
+									doneChan <- true
+								}()
 							})
 
-							It("should return an error", func() {
-								Expect(err).ToNot(BeNil())
+							Context("when source close method fails", func() {
+								BeforeEach(func() {
+									mockSource.
+										EXPECT().
+										Close(mockChannelHub).
+										Return(fmt.Errorf("error closing source")).
+										Times(1)
+
+									mockMessenger.
+										EXPECT().
+										// TODO: expect WriteLog to be called with a string
+										// for the second parameter
+										WriteLog(protocol.LogLevelError, gomock.Any()).
+										Return(nil).
+										Times(1)
+								})
+
+								It("should return an error", func() {
+									Expect(err).ToNot(BeNil())
+								})
+							})
+
+							Context("when source close method succeeds", func() {
+								BeforeEach(func() {
+									mockSource.
+										EXPECT().
+										Close(mockChannelHub).
+										Return(nil).
+										Times(1)
+
+									mockMessenger.
+										EXPECT().
+										// TODO: expect WriteLog to be called with a string
+										// for the second parameter
+										WriteLog(protocol.LogLevelInfo, gomock.Any()).
+										Return(nil).
+										Times(1)
+								})
+
+								It("should NOT return an error", func() {
+									Expect(err).To(BeNil())
+								})
 							})
 						})
 
-						Context("when source read method succeeds", func() {
-							BeforeEach(func() {
-								mockSource.
-									EXPECT().
-									Read(&configuredCatalog, mockMessenger, mockConfigParser, nil).
-									Return(nil).
-									Times(1)
-							})
+						Context("when error channel receives data", func() {
 
-							It("should NOT return an error", func() {
-								Expect(err).To(BeNil())
-							})
+						})
+
+						Context("when record channel receives data", func() {
+
 						})
 					})
 				})

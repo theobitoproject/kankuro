@@ -176,7 +176,15 @@ func (sr SourceRunner) read() error {
 		select {
 
 		case <-sr.chanHub.GetDoneChannel():
-			sr.src.Close(sr.chanHub)
+			err = sr.src.Close(sr.chanHub)
+			if err != nil {
+				// TODO: is there a good way to handle error from messenger.WriteLog?
+				sr.msgr.WriteLog(
+					protocol.LogLevelError,
+					fmt.Errorf("failed closing source: %v", err).Error(),
+				)
+				return err
+			}
 			sr.msgr.WriteLog(
 				protocol.LogLevelInfo,
 				"reading has finished",
