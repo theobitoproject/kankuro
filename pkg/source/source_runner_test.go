@@ -520,11 +520,11 @@ var _ = Describe("SourceRunner", func() {
 						})
 
 						Context("when error channel receives data", func() {
-
+							// TODO: create tests
 						})
 
 						Context("when record channel receives data", func() {
-
+							// TODO: create tests
 						})
 					})
 				})
