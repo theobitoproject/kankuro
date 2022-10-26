@@ -416,7 +416,7 @@ var _ = Describe("SourceRunner", func() {
 					Context("when unmarshaling catalog path succeeds", func() {
 						var recChan messenger.RecordChannel
 						var errChan messenger.ErrorChannel
-						var doneChan messenger.DoneChannel
+						var closingChan messenger.ClosingChannel
 
 						BeforeEach(func() {
 							mockConfigParser.
@@ -440,7 +440,7 @@ var _ = Describe("SourceRunner", func() {
 
 							recChan = messenger.NewRecordChannel()
 							errChan = messenger.NewErrorChannel()
-							doneChan = messenger.NewDoneChannel()
+							closingChan = messenger.NewClosingChannel()
 
 							mockChannelHub.
 								EXPECT().
@@ -456,8 +456,8 @@ var _ = Describe("SourceRunner", func() {
 
 							mockChannelHub.
 								EXPECT().
-								GetDoneChannel().
-								Return(doneChan).
+								GetClosingChannel().
+								Return(closingChan).
 								AnyTimes()
 
 							mockSource.
@@ -466,44 +466,19 @@ var _ = Describe("SourceRunner", func() {
 								Times(1)
 						})
 
-						Context("when done channel receives data", func() {
+						// TODO: add better test cases
+						Context("when all channels close", func() {
 							BeforeEach(func() {
 								go func() {
 									time.Sleep(100 * time.Millisecond)
-									doneChan <- true
+									close(recChan)
+									close(errChan)
+									close(closingChan)
 								}()
-							})
-
-							Context("when source close method fails", func() {
-								BeforeEach(func() {
-									mockSource.
-										EXPECT().
-										Close(mockChannelHub).
-										Return(fmt.Errorf("error closing source")).
-										Times(1)
-
-									mockMessenger.
-										EXPECT().
-										// TODO: expect WriteLog to be called with a string
-										// for the second parameter
-										WriteLog(protocol.LogLevelError, gomock.Any()).
-										Return(nil).
-										Times(1)
-								})
-
-								It("should return an error", func() {
-									Expect(err).ToNot(BeNil())
-								})
 							})
 
 							Context("when source close method succeeds", func() {
 								BeforeEach(func() {
-									mockSource.
-										EXPECT().
-										Close(mockChannelHub).
-										Return(nil).
-										Times(1)
-
 									mockMessenger.
 										EXPECT().
 										// TODO: expect WriteLog to be called with a string
@@ -517,14 +492,6 @@ var _ = Describe("SourceRunner", func() {
 									Expect(err).To(BeNil())
 								})
 							})
-						})
-
-						Context("when error channel receives data", func() {
-							// TODO: create tests
-						})
-
-						Context("when record channel receives data", func() {
-							// TODO: create tests
 						})
 					})
 				})

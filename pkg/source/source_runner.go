@@ -165,49 +165,63 @@ func (sr SourceRunner) read() error {
 		return err
 	}
 
-	go sr.src.Read(
+	sr.src.Read(
 		&incat,
 		sr.msgr,
 		sr.cfgPsr,
 		sr.chanHub,
 	)
 
-	for {
-		select {
+	doneChannel := messenger.NewDoneChannel()
 
-		case <-sr.chanHub.GetDoneChannel():
-			err = sr.src.Close(sr.chanHub)
-			if err != nil {
-				// TODO: is there a good way to handle error from messenger.WriteLog?
-				sr.msgr.WriteLog(
-					protocol.LogLevelError,
-					fmt.Errorf("failed closing source: %v", err).Error(),
-				)
-				return err
-			}
-			sr.msgr.WriteLog(
-				protocol.LogLevelInfo,
-				"reading has finished",
-			)
-			return nil
+	go func() {
+		for {
+			select {
 
-		// in case of any errors, log it and close all channels
-		case err = <-sr.chanHub.GetErrorChannel():
-			sr.msgr.WriteLog(
-				protocol.LogLevelError,
-				fmt.Errorf("failed running source read: %v", err).Error(),
-			)
-			sr.chanHub.GetDoneChannel() <- true
-			return err
+			case _, channelOpen := <-sr.chanHub.GetClosingChannel():
+				if !channelOpen {
+					doneChannel <- true
+				}
 
-		case record := <-sr.chanHub.GetRecordChannel():
-			err = sr.prvtMsgr.WriteRecord(record)
-			if err != nil {
-				sr.chanHub.GetErrorChannel() <- err
-				return err
+			case err, channelOpen := <-sr.chanHub.GetErrorChannel():
+				if channelOpen {
+					sr.msgr.WriteLog(
+						protocol.LogLevelError,
+						fmt.Errorf("failed running source read: %v", err).Error(),
+					)
+
+				} else {
+					doneChannel <- true
+				}
+
+			case record, channelOpen := <-sr.chanHub.GetRecordChannel():
+				if channelOpen {
+					err = sr.prvtMsgr.WriteRecord(record)
+					if err != nil {
+						sr.chanHub.GetErrorChannel() <- err
+					}
+
+				} else {
+					doneChannel <- true
+				}
 			}
 		}
-	}
+	}()
+
+	// Wait for three channels to be closed before continue
+	// - recordChannel
+	// - errorChannel
+	// - closinghannel
+	<-doneChannel
+	<-doneChannel
+	<-doneChannel
+
+	sr.msgr.WriteLog(
+		protocol.LogLevelInfo,
+		"reading has finished",
+	)
+
+	return nil
 }
 
 func (sr *SourceRunner) printConfiguredCatalogOnFile() error {

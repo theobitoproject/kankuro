@@ -6,26 +6,26 @@ type ChannelHub interface {
 	GetRecordChannel() RecordChannel
 	// GetErrorChannel returns the error channel
 	GetErrorChannel() ErrorChannel
-	// GetDoneChannel returns the done channel
-	GetDoneChannel() DoneChannel
+	// GetClosingChannel returns the done channel
+	GetClosingChannel() ClosingChannel
 }
 
 type channelHub struct {
-	recordChannel RecordChannel
-	errorChannel  ErrorChannel
-	doneChannel   DoneChannel
+	recordChannel  RecordChannel
+	errorChannel   ErrorChannel
+	closingChannel ClosingChannel
 }
 
 // NewChannelHub creates a instance of ChannelHub
 func NewChannelHub(
 	recordChannel RecordChannel,
 	errorChannel ErrorChannel,
-	doneChannel DoneChannel,
+	closingChannel ClosingChannel,
 ) ChannelHub {
 	return &channelHub{
 		recordChannel,
 		errorChannel,
-		doneChannel,
+		closingChannel,
 	}
 }
 
@@ -39,7 +39,7 @@ func (ch *channelHub) GetErrorChannel() ErrorChannel {
 	return ch.errorChannel
 }
 
-// GetDoneChannel returns the done channel
-func (ch *channelHub) GetDoneChannel() DoneChannel {
-	return ch.doneChannel
+// GetClosingChannel returns the done channel
+func (ch *channelHub) GetClosingChannel() ClosingChannel {
+	return ch.closingChannel
 }

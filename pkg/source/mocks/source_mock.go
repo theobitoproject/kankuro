@@ -49,20 +49,6 @@ func (mr *MockSourceMockRecorder) Check(msgr, cfgPsr interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockSource)(nil).Check), msgr, cfgPsr)
 }
 
-// Close mocks base method.
-func (m *MockSource) Close(chanHub messenger.ChannelHub) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Close", chanHub)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Close indicates an expected call of Close.
-func (mr *MockSourceMockRecorder) Close(chanHub interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockSource)(nil).Close), chanHub)
-}
-
 // Discover mocks base method.
 func (m *MockSource) Discover(msgr messenger.Messenger, cfgPsr messenger.ConfigParser) (*protocol.Catalog, error) {
 	m.ctrl.T.Helper()

@@ -34,18 +34,18 @@ func (m *MockChannelHub) EXPECT() *MockChannelHubMockRecorder {
 	return m.recorder
 }
 
-// GetDoneChannel mocks base method.
-func (m *MockChannelHub) GetDoneChannel() messenger.DoneChannel {
+// GetClosingChannel mocks base method.
+func (m *MockChannelHub) GetClosingChannel() messenger.ClosingChannel {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDoneChannel")
-	ret0, _ := ret[0].(messenger.DoneChannel)
+	ret := m.ctrl.Call(m, "GetClosingChannel")
+	ret0, _ := ret[0].(messenger.ClosingChannel)
 	return ret0
 }
 
-// GetDoneChannel indicates an expected call of GetDoneChannel.
-func (mr *MockChannelHubMockRecorder) GetDoneChannel() *gomock.Call {
+// GetClosingChannel indicates an expected call of GetClosingChannel.
+func (mr *MockChannelHubMockRecorder) GetClosingChannel() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDoneChannel", reflect.TypeOf((*MockChannelHub)(nil).GetDoneChannel))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClosingChannel", reflect.TypeOf((*MockChannelHub)(nil).GetClosingChannel))
 }
 
 // GetErrorChannel mocks base method.

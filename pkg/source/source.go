@@ -33,8 +33,4 @@ type Source interface {
 		cfgPsr messenger.ConfigParser,
 		chanHub messenger.ChannelHub,
 	)
-	// Close performs any final actions to close and finish the process.
-	// Note: Do not use this method inside the implementation to stop any execution.
-	// Instead, send a value to the done channel (doneChannel <- true)
-	Close(chanHub messenger.ChannelHub) error
 }

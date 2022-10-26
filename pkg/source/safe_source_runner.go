@@ -24,7 +24,7 @@ func NewSafeSourceRunner(src Source, writer io.Writer, args []string) SourceRunn
 	chanHub := messenger.NewChannelHub(
 		messenger.NewRecordChannel(),
 		messenger.NewErrorChannel(),
-		messenger.NewDoneChannel(),
+		messenger.NewClosingChannel(),
 	)
 
 	return NewSourceRunner(src, msgr, prvtMsgr, cfgPsr, chanHub)
