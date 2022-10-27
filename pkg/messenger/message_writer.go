@@ -6,26 +6,26 @@ import (
 	"github.com/theobitoproject/kankuro/pkg/protocol"
 )
 
-// Messenger defines an implementation to send messages
-// This Messenger should be available for the connector implementations
-type Messenger interface {
+// MessageWriter defines an implementation to send messages
+// This MessageWriter should be available for the connector implementations
+type MessageWriter interface {
 	// WriteState writes state information
 	WriteState(stateData *protocol.StateData) error
 	// WriteLog writes a log message
 	WriteLog(logLevel protocol.LogLevel, logMessage string) error
 }
 
-type messenger struct {
+type messageWriter struct {
 	writer io.Writer
 }
 
-// NewMessenger creates a new instance of a Messenger
-func NewMessenger(writer io.Writer) Messenger {
-	return &messenger{writer}
+// NewMessageWriter creates a new instance of a MessageWriter
+func NewMessageWriter(writer io.Writer) MessageWriter {
+	return &messageWriter{writer}
 }
 
 // WriteState writes state information
-func (m *messenger) WriteState(stateData *protocol.StateData) error {
+func (mw *messageWriter) WriteState(stateData *protocol.StateData) error {
 	message, err := protocol.NewStateMessage(&protocol.State{
 		Data: stateData,
 	})
@@ -33,11 +33,11 @@ func (m *messenger) WriteState(stateData *protocol.StateData) error {
 		return err
 	}
 
-	return write(m.writer, &message)
+	return write(mw.writer, &message)
 }
 
 // WriteLog writes a log message
-func (m *messenger) WriteLog(logLevel protocol.LogLevel, logMessage string) error {
+func (mw *messageWriter) WriteLog(logLevel protocol.LogLevel, logMessage string) error {
 	message, err := protocol.NewLogMessage(&protocol.Log{
 		Level:   logLevel,
 		Message: logMessage,
@@ -46,5 +46,5 @@ func (m *messenger) WriteLog(logLevel protocol.LogLevel, logMessage string) erro
 		return err
 	}
 
-	return write(m.writer, &message)
+	return write(mw.writer, &message)
 }

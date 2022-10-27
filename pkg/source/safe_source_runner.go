@@ -10,22 +10,26 @@ import (
 // NewSafeSourceRunner returns an instance of SourceRunner
 // but it wraps the writer into a safe writer instance
 // to properly write messages in safe manner
-func NewSafeSourceRunner(src Source, writer io.Writer, args []string) SourceRunner {
-	safeWriter := newSafeWriter(writer)
+func NewSafeSourceRunner(
+	src Source,
+	w io.Writer,
+	args []string,
+) SourceRunner {
+	sw := newSafeWriter(w)
 
-	timer := tools.NewTimer()
+	t := tools.NewTimer()
 
-	msgr := messenger.NewMessenger(safeWriter)
+	mw := messenger.NewMessageWriter(sw)
 
-	prvtMsgr := messenger.NewPrivateMessenger(safeWriter, timer)
+	pmw := messenger.NewPrivateMessageWriter(sw, t)
 
-	cfgPsr := messenger.NewConfigParser(args)
+	cp := messenger.NewConfigParser(args)
 
-	chanHub := messenger.NewChannelHub(
+	hub := messenger.NewChannelHub(
 		messenger.NewRecordChannel(),
 		messenger.NewErrorChannel(),
 		messenger.NewClosingChannel(),
 	)
 
-	return NewSourceRunner(src, msgr, prvtMsgr, cfgPsr, chanHub)
+	return NewSourceRunner(src, mw, pmw, cp, hub)
 }

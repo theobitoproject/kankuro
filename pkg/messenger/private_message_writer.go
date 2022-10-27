@@ -7,9 +7,9 @@ import (
 	"github.com/theobitoproject/kankuro/tools"
 )
 
-// PrivateMessenger defines an implementation to send messages
-// This PrivateMessenger should NOT be available for the connector implementations
-type PrivateMessenger interface {
+// PrivateMessageWriter defines an implementation to send messages
+// This PrivateMessageWriter should NOT be available for the connector implementations
+type PrivateMessageWriter interface {
 	// WriteRecord writes a record
 	WriteRecord(record *protocol.Record) error
 	// WriteConnectionStat writes a connection check status
@@ -20,22 +20,22 @@ type PrivateMessenger interface {
 	WriteSpec(connectorSpecification *protocol.ConnectorSpecification) error
 }
 
-type privateMessenger struct {
+type privateMessageWriter struct {
 	writer io.Writer
 	timer  tools.Timer
 }
 
-// NewPrivateMessenger creates a new instance of PrivateMessenger
-func NewPrivateMessenger(writer io.Writer, timer tools.Timer) PrivateMessenger {
-	return &privateMessenger{writer, timer}
+// NewPrivateMessageWriter creates a new instance of PrivateMessageWriter
+func NewPrivateMessageWriter(writer io.Writer, timer tools.Timer) PrivateMessageWriter {
+	return &privateMessageWriter{writer, timer}
 }
 
 // WriteRecord writes a record
-func (pm *privateMessenger) WriteRecord(record *protocol.Record) error {
+func (pmw *privateMessageWriter) WriteRecord(record *protocol.Record) error {
 
 	// fallback: if emitted at is not set, the set it
 	if record.EmittedAt == 0 {
-		record.EmittedAt = pm.timer.Now().UnixMilli()
+		record.EmittedAt = pmw.timer.Now().UnixMilli()
 	}
 
 	message, err := protocol.NewRecordMessage(record)
@@ -43,11 +43,11 @@ func (pm *privateMessenger) WriteRecord(record *protocol.Record) error {
 		return err
 	}
 
-	return write(pm.writer, &message)
+	return write(pmw.writer, &message)
 }
 
 // WriteConnectionStat writes a connection check status
-func (pm *privateMessenger) WriteConnectionStat(status protocol.CheckStatus) error {
+func (pmw *privateMessageWriter) WriteConnectionStat(status protocol.CheckStatus) error {
 	message, err := protocol.NewConnectionStatusMessage(&protocol.ConnectionStatus{
 		Status: status,
 	})
@@ -55,25 +55,25 @@ func (pm *privateMessenger) WriteConnectionStat(status protocol.CheckStatus) err
 		return err
 	}
 
-	return write(pm.writer, &message)
+	return write(pmw.writer, &message)
 }
 
 // WriteLog writes a catalog
-func (pm *privateMessenger) WriteCatalog(catalog *protocol.Catalog) error {
+func (pmw *privateMessageWriter) WriteCatalog(catalog *protocol.Catalog) error {
 	message, err := protocol.NewCatalogMessage(catalog)
 	if err != nil {
 		return err
 	}
 
-	return write(pm.writer, &message)
+	return write(pmw.writer, &message)
 }
 
 // WriteLog writes a connector specification
-func (pm *privateMessenger) WriteSpec(connectorSpecification *protocol.ConnectorSpecification) error {
+func (pmw *privateMessageWriter) WriteSpec(connectorSpecification *protocol.ConnectorSpecification) error {
 	message, err := protocol.NewConnectorSpecificationMessage(connectorSpecification)
 	if err != nil {
 		return err
 	}
 
-	return write(pm.writer, &message)
+	return write(pmw.writer, &message)
 }

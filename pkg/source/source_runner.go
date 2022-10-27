@@ -13,35 +13,35 @@ import (
 type SourceRunner struct {
 	src Source
 
-	msgr     messenger.Messenger
-	prvtMsgr messenger.PrivateMessenger
+	mw  messenger.MessageWriter
+	pmw messenger.PrivateMessageWriter
 
-	cfgPsr messenger.ConfigParser
+	cp messenger.ConfigParser
 
-	chanHub messenger.ChannelHub
+	hub messenger.ChannelHub
 }
 
 // NewSourceRunner takes your defined Source and plugs it in with the rest of airbyte
 func NewSourceRunner(
 	src Source,
-	msgr messenger.Messenger,
-	prvtMsgr messenger.PrivateMessenger,
-	cfgPsr messenger.ConfigParser,
-	chanHub messenger.ChannelHub,
+	mw messenger.MessageWriter,
+	pmw messenger.PrivateMessageWriter,
+	cp messenger.ConfigParser,
+	hub messenger.ChannelHub,
 ) SourceRunner {
 	//  TODO: should checks be added to catch nil pointers?
 	return SourceRunner{
 		src,
-		msgr,
-		prvtMsgr,
-		cfgPsr,
-		chanHub,
+		mw,
+		pmw,
+		cp,
+		hub,
 	}
 }
 
 // Start performs actions related to a single Airbyte command (spec, check, read, write, etc)
 func (sr SourceRunner) Start() (err error) {
-	mainCmd, err := sr.cfgPsr.GetMainCommand()
+	mainCmd, err := sr.cp.GetMainCommand()
 	if err != nil {
 		return err
 	}
@@ -76,20 +76,20 @@ func (sr SourceRunner) Start() (err error) {
 }
 
 func (sr SourceRunner) spec() error {
-	spec, err := sr.src.Spec(sr.msgr, sr.cfgPsr)
+	spec, err := sr.src.Spec(sr.mw, sr.cp)
 	if err != nil {
 		// TODO: is there a good way to handle error from messenger.WriteLog?
-		sr.msgr.WriteLog(
+		sr.mw.WriteLog(
 			protocol.LogLevelError,
 			fmt.Errorf("failed running source spec: %v", err).Error(),
 		)
 		return err
 	}
 
-	err = sr.prvtMsgr.WriteSpec(spec)
+	err = sr.pmw.WriteSpec(spec)
 	if err != nil {
 		// TODO: is there a good way to handle error from messenger.WriteLog?
-		sr.msgr.WriteLog(
+		sr.mw.WriteLog(
 			protocol.LogLevelError,
 			fmt.Errorf("failed writing spec: %v", err).Error(),
 		)
@@ -100,7 +100,7 @@ func (sr SourceRunner) spec() error {
 }
 
 func (sr SourceRunner) check() error {
-	err := sr.src.Check(sr.msgr, sr.cfgPsr)
+	err := sr.src.Check(sr.mw, sr.cp)
 
 	checkStatus := protocol.CheckStatusSuccess
 	if err != nil {
@@ -109,16 +109,16 @@ func (sr SourceRunner) check() error {
 		// write log and don't return error
 		// because we need to write success/failed connection status message
 		// TODO: is there a good way to handle error from messenger.WriteLog?
-		sr.msgr.WriteLog(
+		sr.mw.WriteLog(
 			protocol.LogLevelError,
 			fmt.Errorf("failed running source check: %v", err).Error(),
 		)
 	}
 
-	err = sr.prvtMsgr.WriteConnectionStat(checkStatus)
+	err = sr.pmw.WriteConnectionStat(checkStatus)
 	if err != nil {
 		// TODO: is there a good way to handle error from messenger.WriteLog?
-		sr.msgr.WriteLog(
+		sr.mw.WriteLog(
 			protocol.LogLevelError,
 			fmt.Errorf("failed writing connection stat: %v", err).Error(),
 		)
@@ -129,20 +129,20 @@ func (sr SourceRunner) check() error {
 }
 
 func (sr SourceRunner) discover() error {
-	ct, err := sr.src.Discover(sr.msgr, sr.cfgPsr)
+	ct, err := sr.src.Discover(sr.mw, sr.cp)
 	if err != nil {
 		// TODO: is there a good way to handle error from messenger.WriteLog?
-		sr.msgr.WriteLog(
+		sr.mw.WriteLog(
 			protocol.LogLevelError,
 			fmt.Errorf("failed running source discover: %v", err).Error(),
 		)
 		return err
 	}
 
-	err = sr.prvtMsgr.WriteCatalog(ct)
+	err = sr.pmw.WriteCatalog(ct)
 	if err != nil {
 		// TODO: is there a good way to handle error from messenger.WriteLog?
-		sr.msgr.WriteLog(
+		sr.mw.WriteLog(
 			protocol.LogLevelError,
 			fmt.Errorf("failed writing catalog: %v", err).Error(),
 		)
@@ -153,23 +153,23 @@ func (sr SourceRunner) discover() error {
 }
 
 func (sr SourceRunner) read() error {
-	var incat protocol.ConfiguredCatalog
+	var cc protocol.ConfiguredCatalog
 
-	err := sr.cfgPsr.UnmarshalCatalogPath(&incat)
+	err := sr.cp.UnmarshalCatalogPath(&cc)
 	if err != nil {
 		// TODO: is there a good way to handle error from messenger.WriteLog?
-		sr.msgr.WriteLog(
+		sr.mw.WriteLog(
 			protocol.LogLevelError,
-			fmt.Errorf("failed unmarshaling catalog catalog: %v", err).Error(),
+			fmt.Errorf("failed unmarshaling catalog: %v", err).Error(),
 		)
 		return err
 	}
 
 	sr.src.Read(
-		&incat,
-		sr.msgr,
-		sr.cfgPsr,
-		sr.chanHub,
+		&cc,
+		sr.mw,
+		sr.cp,
+		sr.hub,
 	)
 
 	doneChannel := messenger.NewDoneChannel()
@@ -178,14 +178,14 @@ func (sr SourceRunner) read() error {
 		for {
 			select {
 
-			case _, channelOpen := <-sr.chanHub.GetClosingChannel():
+			case _, channelOpen := <-sr.hub.GetClosingChannel():
 				if !channelOpen {
 					doneChannel <- true
 				}
 
-			case err, channelOpen := <-sr.chanHub.GetErrorChannel():
+			case err, channelOpen := <-sr.hub.GetErrorChannel():
 				if channelOpen {
-					sr.msgr.WriteLog(
+					sr.mw.WriteLog(
 						protocol.LogLevelError,
 						fmt.Errorf("failed running source read: %v", err).Error(),
 					)
@@ -194,11 +194,11 @@ func (sr SourceRunner) read() error {
 					doneChannel <- true
 				}
 
-			case record, channelOpen := <-sr.chanHub.GetRecordChannel():
+			case record, channelOpen := <-sr.hub.GetRecordChannel():
 				if channelOpen {
-					err = sr.prvtMsgr.WriteRecord(record)
+					err = sr.pmw.WriteRecord(record)
 					if err != nil {
-						sr.chanHub.GetErrorChannel() <- err
+						sr.hub.GetErrorChannel() <- err
 					}
 
 				} else {
@@ -216,7 +216,7 @@ func (sr SourceRunner) read() error {
 	<-doneChannel
 	<-doneChannel
 
-	sr.msgr.WriteLog(
+	sr.mw.WriteLog(
 		protocol.LogLevelInfo,
 		"reading has finished",
 	)
@@ -225,7 +225,7 @@ func (sr SourceRunner) read() error {
 }
 
 func (sr *SourceRunner) printConfiguredCatalogOnFile() error {
-	ct, err := sr.src.Discover(sr.msgr, sr.cfgPsr)
+	ct, err := sr.src.Discover(sr.mw, sr.cp)
 	if err != nil {
 		return err
 	}
