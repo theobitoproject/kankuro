@@ -179,7 +179,6 @@ func (s *RandomAPISource) Read(
 
 		default:
 			hub.GetErrorChannel() <- fmt.Errorf("stream not supported: %s", stream.Stream.Name)
-			return
 		}
 	}
 }
