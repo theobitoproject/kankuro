@@ -161,8 +161,6 @@ func (s *RandomAPISource) Read(
 			<-doneStreamChannel
 		}
 
-		hub.GetClosingChannel() <- true
-
 		close(hub.GetRecordChannel())
 		close(hub.GetErrorChannel())
 		close(hub.GetClosingChannel())
