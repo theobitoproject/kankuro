@@ -123,13 +123,6 @@ func (dr DestinationRunner) write() error {
 		return err
 	}
 
-	dr.dst.Write(
-		&cc,
-		dr.mw,
-		dr.cp,
-		dr.hub,
-	)
-
 	doneChannel := messenger.NewDoneChannel()
 
 	go func() {
@@ -161,6 +154,13 @@ func (dr DestinationRunner) write() error {
 	}()
 
 	go dr.mr.Read(dr.hub)
+
+	dr.dst.Write(
+		&cc,
+		dr.mw,
+		dr.cp,
+		dr.hub,
+	)
 
 	// Wait for three channels to be closed before continue
 	// - recordChannel

@@ -165,13 +165,6 @@ func (sr SourceRunner) read() error {
 		return err
 	}
 
-	sr.src.Read(
-		&cc,
-		sr.mw,
-		sr.cp,
-		sr.hub,
-	)
-
 	doneChannel := messenger.NewDoneChannel()
 
 	go func() {
@@ -207,6 +200,13 @@ func (sr SourceRunner) read() error {
 			}
 		}
 	}()
+
+	sr.src.Read(
+		&cc,
+		sr.mw,
+		sr.cp,
+		sr.hub,
+	)
 
 	// Wait for three channels to be closed before continue
 	// - recordChannel

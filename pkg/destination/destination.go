@@ -5,7 +5,7 @@ import (
 	"github.com/theobitoproject/kankuro/pkg/protocol"
 )
 
-// Destination is the only interface you need to define to create your destination!
+// Destination defines a connector to load/store data
 type Destination interface {
 	// Spec returns the schema which described how the destination connector can be configured
 	Spec(
@@ -19,7 +19,7 @@ type Destination interface {
 	) error
 	// Write takes the data from the record channel
 	// and stores it in the destination
-	// Note: all channels from hub needs to be closed
+	// Note: all channels except record channel from hub needs to be closed
 	Write(
 		cc *protocol.ConfiguredCatalog,
 		mw messenger.MessageWriter,
