@@ -7,6 +7,10 @@ import (
 	"github.com/theobitoproject/kankuro/pkg/protocol"
 )
 
+// type messages struct {
+// 	Data []protocol.AirbyteMessage `json:"data"`
+// }
+
 type DestinationRunner struct {
 	dst Destination
 
@@ -144,11 +148,6 @@ func (dr DestinationRunner) write() error {
 				} else {
 					doneChannel <- true
 				}
-
-			case _, channelOpen := <-dr.hub.GetRecordChannel():
-				if !channelOpen {
-					doneChannel <- true
-				}
 			}
 		}
 	}()
@@ -163,10 +162,8 @@ func (dr DestinationRunner) write() error {
 	)
 
 	// Wait for three channels to be closed before continue
-	// - recordChannel
 	// - errorChannel
 	// - closinghannel
-	<-doneChannel
 	<-doneChannel
 	<-doneChannel
 

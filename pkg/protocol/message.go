@@ -11,7 +11,7 @@ type Message interface {
 	MarshalMessage() ([]byte, error)
 }
 
-type message struct {
+type AirbyteMessage struct {
 	Type                   MessageType             `json:"type"`
 	Record                 *Record                 `json:"record,omitempty"`
 	State                  *State                  `json:"state,omitempty"`
@@ -27,7 +27,7 @@ func NewRecordMessage(record *Record) (Message, error) {
 		return nil, fmt.Errorf("record cannot be empty")
 	}
 
-	return &message{
+	return &AirbyteMessage{
 		Type:   MessageTypeRecord,
 		Record: record,
 	}, nil
@@ -39,7 +39,7 @@ func NewStateMessage(state *State) (Message, error) {
 		return nil, fmt.Errorf("state cannot be empty")
 	}
 
-	return &message{
+	return &AirbyteMessage{
 		Type:  MessageTypeState,
 		State: state,
 	}, nil
@@ -51,7 +51,7 @@ func NewLogMessage(log *Log) (Message, error) {
 		return nil, fmt.Errorf("log cannot be empty")
 	}
 
-	return &message{
+	return &AirbyteMessage{
 		Type: MessageTypeLog,
 		Log:  log,
 	}, nil
@@ -63,7 +63,7 @@ func NewConnectorSpecificationMessage(connectorSpecification *ConnectorSpecifica
 		return nil, fmt.Errorf("connectorSpecification cannot be empty")
 	}
 
-	return &message{
+	return &AirbyteMessage{
 		Type:                   MessageTypeSpec,
 		ConnectorSpecification: connectorSpecification,
 	}, nil
@@ -75,7 +75,7 @@ func NewConnectionStatusMessage(connectionStatus *ConnectionStatus) (Message, er
 		return nil, fmt.Errorf("connectionStatus cannot be empty")
 	}
 
-	return &message{
+	return &AirbyteMessage{
 		Type:             MessageTypeConnectionStat,
 		ConnectionStatus: connectionStatus,
 	}, nil
@@ -87,13 +87,13 @@ func NewCatalogMessage(catalog *Catalog) (Message, error) {
 		return nil, fmt.Errorf("catalog cannot be empty")
 	}
 
-	return &message{
+	return &AirbyteMessage{
 		Type:    MessageTypeCatalog,
 		Catalog: catalog,
 	}, nil
 }
 
 // MarshalMessage returns the JSON encoding of the message
-func (m *message) MarshalMessage() ([]byte, error) {
+func (m *AirbyteMessage) MarshalMessage() ([]byte, error) {
 	return json.Marshal(m)
 }

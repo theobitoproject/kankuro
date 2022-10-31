@@ -7,7 +7,7 @@ const (
 	SyncModeIncremental SyncMode = "incremental"
 )
 
-var (
+const (
 	// DestinationSyncModeAppend is used for the destination to know it needs to append data
 	DestinationSyncModeAppend DestinationSyncMode = "append"
 	// DestinationSyncModeOverwrite is used to indicate the destination should overwrite data

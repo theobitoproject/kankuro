@@ -39,15 +39,21 @@ func (mr *messageReader) Read(hub ChannelHub) {
 			return
 
 		default:
-			msg := scanner.Text()
+			txt := scanner.Text()
 
-			var rec *protocol.Record
-			err = json.Unmarshal([]byte(msg), rec)
+			var msg protocol.AirbyteMessage
+			err = json.Unmarshal([]byte(txt), &msg)
 			if err != nil {
 				hub.GetErrorChannel() <- err
+				continue
 			}
 
-			hub.GetRecordChannel() <- rec
+			if msg.Type != protocol.MessageTypeRecord {
+				// ignore all messages but records
+				continue
+			}
+
+			hub.GetRecordChannel() <- msg.Record
 		}
 	}
 	if err := scanner.Err(); err != nil {
