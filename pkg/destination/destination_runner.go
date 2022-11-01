@@ -7,10 +7,7 @@ import (
 	"github.com/theobitoproject/kankuro/pkg/protocol"
 )
 
-// type messages struct {
-// 	Data []protocol.AirbyteMessage `json:"data"`
-// }
-
+// DestinationRunner acts as an "orchestrator" for running a destination
 type DestinationRunner struct {
 	dst Destination
 
@@ -24,6 +21,7 @@ type DestinationRunner struct {
 	hub messenger.ChannelHub
 }
 
+// NewDestinationRunner creates an instance of DestinationRunner
 func NewDestinationRunner(
 	dst Destination,
 	mw messenger.MessageWriter,
@@ -42,6 +40,7 @@ func NewDestinationRunner(
 	}
 }
 
+// Start performs actions related to a single Airbyte command (spec, check, read, write, etc)
 func (dr *DestinationRunner) Start() (err error) {
 	mainCmd, err := dr.cp.GetMainCommand()
 	if err != nil {

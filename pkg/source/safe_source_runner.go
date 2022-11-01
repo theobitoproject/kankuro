@@ -8,8 +8,7 @@ import (
 )
 
 // NewSafeSourceRunner returns an instance of SourceRunner
-// but it wraps the writer into a safe writer instance
-// to properly write messages in safe manner
+// reducing the complexity of creating it for clients
 func NewSafeSourceRunner(
 	src Source,
 	w io.Writer,

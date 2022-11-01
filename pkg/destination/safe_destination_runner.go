@@ -7,9 +7,8 @@ import (
 	"github.com/theobitoproject/kankuro/tools"
 )
 
-// NewSafeSourceRunner returns an instance of SourceRunner
-// but it wraps the writer into a safe writer instance
-// to properly write messages in safe manner
+// NewSafeDestinationRunner returns an instance of DestinationRunner
+// reducing the complexity of creating it for clients
 func NewSafeDestinationRunner(
 	dst Destination,
 	w io.Writer,

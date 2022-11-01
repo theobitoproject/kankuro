@@ -8,7 +8,7 @@ import (
 	"github.com/theobitoproject/kankuro/tools"
 )
 
-// SourceRunner acts as an "orchestrator" of sorts to run your source for you
+// SourceRunner acts as an "orchestrator" for running a source
 type SourceRunner struct {
 	src Source
 
@@ -20,7 +20,7 @@ type SourceRunner struct {
 	hub messenger.ChannelHub
 }
 
-// NewSourceRunner takes your defined Source and plugs it in with the rest of airbyte
+// NewSourceRunner creates an instance of SourceRunner
 func NewSourceRunner(
 	src Source,
 	mw messenger.MessageWriter,
