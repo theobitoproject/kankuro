@@ -31,8 +31,8 @@ func NewDestinationRunner(
 	mr messenger.MessageReader,
 	cp messenger.ConfigParser,
 	hub messenger.ChannelHub,
-) DestinationRunner {
-	return DestinationRunner{
+) *DestinationRunner {
+	return &DestinationRunner{
 		dst,
 		mw,
 		pmw,
@@ -42,7 +42,7 @@ func NewDestinationRunner(
 	}
 }
 
-func (dr DestinationRunner) Start() (err error) {
+func (dr *DestinationRunner) Start() (err error) {
 	mainCmd, err := dr.cp.GetMainCommand()
 	if err != nil {
 		return err
@@ -69,7 +69,7 @@ func (dr DestinationRunner) Start() (err error) {
 	return err
 }
 
-func (dr DestinationRunner) spec() error {
+func (dr *DestinationRunner) spec() error {
 	spec, err := dr.dst.Spec(dr.mw, dr.cp)
 	if err != nil {
 		// TODO: is there a good way to handle error from messenger.WriteLog?
@@ -83,7 +83,7 @@ func (dr DestinationRunner) spec() error {
 	return dr.pmw.WriteSpec(spec)
 }
 
-func (dr DestinationRunner) check() error {
+func (dr *DestinationRunner) check() error {
 	err := dr.dst.Check(dr.mw, dr.cp)
 
 	checkStatus := protocol.CheckStatusSuccess
@@ -112,7 +112,7 @@ func (dr DestinationRunner) check() error {
 	return err
 }
 
-func (dr DestinationRunner) write() error {
+func (dr *DestinationRunner) write() error {
 	dr.mw.WriteLog(protocol.LogLevelInfo, "writing from dst runner...")
 
 	var cc protocol.ConfiguredCatalog

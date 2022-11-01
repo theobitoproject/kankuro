@@ -14,7 +14,7 @@ import (
 )
 
 var _ = Describe("SourceRunner", func() {
-	var sourceRunner SourceRunner
+	var sourceRunner *SourceRunner
 	var err error
 
 	var mockSource *sourcemocks.MockSource

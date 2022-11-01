@@ -15,7 +15,7 @@ func NewSafeDestinationRunner(
 	w io.Writer,
 	r io.Reader,
 	args []string,
-) DestinationRunner {
+) *DestinationRunner {
 	sw := tools.NewSafeWriter(w)
 
 	t := tools.NewTimer()

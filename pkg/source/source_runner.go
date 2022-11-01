@@ -27,9 +27,9 @@ func NewSourceRunner(
 	pmw messenger.PrivateMessageWriter,
 	cp messenger.ConfigParser,
 	hub messenger.ChannelHub,
-) SourceRunner {
+) *SourceRunner {
 	//  TODO: should checks be added to catch nil pointers?
-	return SourceRunner{
+	return &SourceRunner{
 		src,
 		mw,
 		pmw,
@@ -39,7 +39,7 @@ func NewSourceRunner(
 }
 
 // Start performs actions related to a single Airbyte command (spec, check, read, write, etc)
-func (sr SourceRunner) Start() (err error) {
+func (sr *SourceRunner) Start() (err error) {
 	mainCmd, err := sr.cp.GetMainCommand()
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (sr SourceRunner) Start() (err error) {
 	return err
 }
 
-func (sr SourceRunner) spec() error {
+func (sr *SourceRunner) spec() error {
 	spec, err := sr.src.Spec(sr.mw, sr.cp)
 	if err != nil {
 		// TODO: is there a good way to handle error from messenger.WriteLog?
@@ -98,7 +98,7 @@ func (sr SourceRunner) spec() error {
 	return err
 }
 
-func (sr SourceRunner) check() error {
+func (sr *SourceRunner) check() error {
 	err := sr.src.Check(sr.mw, sr.cp)
 
 	checkStatus := protocol.CheckStatusSuccess
@@ -127,7 +127,7 @@ func (sr SourceRunner) check() error {
 	return err
 }
 
-func (sr SourceRunner) discover() error {
+func (sr *SourceRunner) discover() error {
 	ct, err := sr.src.Discover(sr.mw, sr.cp)
 	if err != nil {
 		// TODO: is there a good way to handle error from messenger.WriteLog?
@@ -151,7 +151,7 @@ func (sr SourceRunner) discover() error {
 	return err
 }
 
-func (sr SourceRunner) read() error {
+func (sr *SourceRunner) read() error {
 	var cc protocol.ConfiguredCatalog
 
 	err := sr.cp.UnmarshalCatalogPath(&cc)
