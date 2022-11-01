@@ -32,30 +32,23 @@ func (mr *messageReader) Read(hub ChannelHub) {
 
 	scanner := bufio.NewScanner(mr.r)
 	for scanner.Scan() {
-		select {
+		txt := scanner.Text()
 
-		case <-hub.GetClosingChannel():
-			close(hub.GetRecordChannel())
-			return
-
-		default:
-			txt := scanner.Text()
-
-			var msg protocol.AirbyteMessage
-			err = json.Unmarshal([]byte(txt), &msg)
-			if err != nil {
-				hub.GetErrorChannel() <- err
-				continue
-			}
-
-			if msg.Type != protocol.MessageTypeRecord {
-				// ignore all messages but records
-				continue
-			}
-
-			hub.GetRecordChannel() <- msg.Record
+		var msg protocol.AirbyteMessage
+		err = json.Unmarshal([]byte(txt), &msg)
+		if err != nil {
+			hub.GetErrorChannel() <- err
+			continue
 		}
+
+		if msg.Type != protocol.MessageTypeRecord {
+			// ignore all messages but records
+			continue
+		}
+
+		hub.GetRecordChannel() <- msg.Record
 	}
+
 	if err := scanner.Err(); err != nil {
 		hub.GetErrorChannel() <- err
 	}

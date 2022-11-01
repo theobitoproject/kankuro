@@ -30,7 +30,6 @@ func NewSafeDestinationRunner(
 	hub := messenger.NewChannelHub(
 		messenger.NewRecordChannel(),
 		messenger.NewErrorChannel(),
-		messenger.NewClosingChannel(),
 	)
 
 	return NewDestinationRunner(dst, mw, pmw, mr, cp, hub)

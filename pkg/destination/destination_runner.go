@@ -130,26 +130,13 @@ func (dr DestinationRunner) write() error {
 	doneChannel := messenger.NewDoneChannel()
 
 	go func() {
-		for {
-			select {
-
-			case _, channelOpen := <-dr.hub.GetClosingChannel():
-				if !channelOpen {
-					doneChannel <- true
-				}
-
-			case err, channelOpen := <-dr.hub.GetErrorChannel():
-				if channelOpen {
-					dr.mw.WriteLog(
-						protocol.LogLevelError,
-						fmt.Errorf("failed running destination write: %v", err).Error(),
-					)
-
-				} else {
-					doneChannel <- true
-				}
-			}
+		for err := range dr.hub.GetErrorChannel() {
+			dr.mw.WriteLog(
+				protocol.LogLevelError,
+				fmt.Errorf("failed running destination write: %v", err).Error(),
+			)
 		}
+		doneChannel <- true
 	}()
 
 	go dr.mr.Read(dr.hub)
@@ -161,10 +148,8 @@ func (dr DestinationRunner) write() error {
 		dr.hub,
 	)
 
-	// Wait for three channels to be closed before continue
+	// Wait for error channel to be closed before continue
 	// - errorChannel
-	// - closinghannel
-	<-doneChannel
 	<-doneChannel
 
 	dr.mw.WriteLog(

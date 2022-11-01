@@ -122,20 +122,13 @@ func (d *csvDestination) Write(
 		}
 
 		close(hub.GetErrorChannel())
-		close(hub.GetClosingChannel())
 	}()
 
 	csvRecordChann := newCsvRecordChannel()
 
 	rm := newCsvRecordMarshaler(hub, csvRecordChann, doneStreamChannel)
 	rm.addWorker()
-	rm.addWorker()
-	rm.addWorker()
-	rm.addWorker()
 
 	cfh := newCsvFileHandler(hub, csvRecordChann, doneStreamChannel)
 	cfh.addWorker()
-	cfh.addWorker()
-	// cfh.addWorker()
-	// cfh.addWorker()
 }

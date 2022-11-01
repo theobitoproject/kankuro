@@ -171,11 +171,6 @@ func (sr SourceRunner) read() error {
 		for {
 			select {
 
-			case _, channelOpen := <-sr.hub.GetClosingChannel():
-				if !channelOpen {
-					doneChannel <- true
-				}
-
 			case err, channelOpen := <-sr.hub.GetErrorChannel():
 				if channelOpen {
 					sr.mw.WriteLog(
@@ -211,8 +206,6 @@ func (sr SourceRunner) read() error {
 	// Wait for three channels to be closed before continue
 	// - recordChannel
 	// - errorChannel
-	// - closinghannel
-	<-doneChannel
 	<-doneChannel
 	<-doneChannel
 

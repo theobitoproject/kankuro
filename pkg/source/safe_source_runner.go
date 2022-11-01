@@ -28,7 +28,6 @@ func NewSafeSourceRunner(
 	hub := messenger.NewChannelHub(
 		messenger.NewRecordChannel(),
 		messenger.NewErrorChannel(),
-		messenger.NewClosingChannel(),
 	)
 
 	return NewSourceRunner(src, mw, pmw, cp, hub)
