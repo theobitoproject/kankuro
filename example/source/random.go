@@ -33,11 +33,8 @@ func (s *randomAPISource) Spec(
 	cp messenger.ConfigParser,
 ) (*protocol.ConnectorSpecification, error) {
 	return &protocol.ConnectorSpecification{
-		DocumentationURL:      "https://random-data-api.com/",
-		ChangeLogURL:          "https://random-data-api.com/",
-		SupportsIncremental:   false,
-		SupportsNormalization: false,
-		SupportsDBT:           false,
+		DocumentationURL: "https://random-data-api.com/",
+		ChangeLogURL:     "https://random-data-api.com/",
 		SupportedDestinationSyncModes: []protocol.DestinationSyncMode{
 			protocol.DestinationSyncModeOverwrite,
 		},
