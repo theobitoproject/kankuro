@@ -15,7 +15,7 @@ func NewSafeSourceRunner(
 	w io.Writer,
 	args []string,
 ) SourceRunner {
-	sw := newSafeWriter(w)
+	sw := tools.NewSafeWriter(w)
 
 	t := tools.NewTimer()
 

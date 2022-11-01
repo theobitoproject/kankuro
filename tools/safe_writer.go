@@ -1,4 +1,4 @@
-package source
+package tools
 
 import (
 	"io"
@@ -12,7 +12,7 @@ type safeWriter struct {
 }
 
 // newSafeWriter creates a new instance of SafeWriter
-func newSafeWriter(w io.Writer) io.Writer {
+func NewSafeWriter(w io.Writer) io.Writer {
 	return &safeWriter{
 		w: w,
 	}

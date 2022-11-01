@@ -1,12 +1,11 @@
 package source
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/theobitoproject/kankuro/pkg/messenger"
 	"github.com/theobitoproject/kankuro/pkg/protocol"
+	"github.com/theobitoproject/kankuro/tools"
 )
 
 // SourceRunner acts as an "orchestrator" of sorts to run your source for you
@@ -65,7 +64,7 @@ func (sr SourceRunner) Start() (err error) {
 		err = sr.read()
 
 	// kankuro dev commands
-	case CmdPrintConfiguredCatalog:
+	case tools.CmdPrintConfiguredCatalog:
 		err = sr.printConfiguredCatalogOnFile()
 
 	default:
@@ -223,31 +222,7 @@ func (sr *SourceRunner) printConfiguredCatalogOnFile() error {
 		return err
 	}
 
-	configuredStreams := []protocol.ConfiguredStream{}
-
-	for _, stream := range catalog.Streams {
-		configuredStreams = append(configuredStreams, protocol.ConfiguredStream{
-			Stream:              stream,
-			SyncMode:            protocol.SyncModeFullRefresh,
-			DestinationSyncMode: protocol.DestinationSyncModeOverwrite,
-		})
-	}
-
-	configuredCatalog := protocol.ConfiguredCatalog{
-		Streams: configuredStreams,
-	}
-
-	jsonConfiguredCatalog, err := json.Marshal(configuredCatalog)
-	if err != nil {
-		return err
-	}
-
 	// TODO: find a good way to define the path of the file
 	// where the catalog will be stored
-	err = os.MkdirAll("sample_files", 0755)
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile("sample_files/configured_catalog.json", jsonConfiguredCatalog, 0755)
+	return tools.PrintConfiguredCatalogOnFile(catalog, "sample_files", "configured_catalog.json")
 }

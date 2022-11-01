@@ -1,4 +1,4 @@
-package source
+package tools
 
 import "github.com/theobitoproject/kankuro/pkg/protocol"
 
