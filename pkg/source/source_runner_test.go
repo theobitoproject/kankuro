@@ -416,7 +416,6 @@ var _ = Describe("SourceRunner", func() {
 					Context("when unmarshaling catalog path succeeds", func() {
 						var recChan messenger.RecordChannel
 						var errChan messenger.ErrorChannel
-						var closingChan messenger.ClosingChannel
 
 						BeforeEach(func() {
 							mockConfigParser.
@@ -440,7 +439,6 @@ var _ = Describe("SourceRunner", func() {
 
 							recChan = messenger.NewRecordChannel()
 							errChan = messenger.NewErrorChannel()
-							closingChan = messenger.NewClosingChannel()
 
 							mockChannelHub.
 								EXPECT().
@@ -452,12 +450,6 @@ var _ = Describe("SourceRunner", func() {
 								EXPECT().
 								GetErrorChannel().
 								Return(errChan).
-								AnyTimes()
-
-							mockChannelHub.
-								EXPECT().
-								GetClosingChannel().
-								Return(closingChan).
 								AnyTimes()
 
 							mockSource.
@@ -473,7 +465,6 @@ var _ = Describe("SourceRunner", func() {
 									time.Sleep(100 * time.Millisecond)
 									close(recChan)
 									close(errChan)
-									close(closingChan)
 								}()
 							})
 

@@ -65,7 +65,7 @@ func (sr SourceRunner) Start() (err error) {
 		err = sr.read()
 
 	// kankuro dev commands
-	case CmdPrintCatalog:
+	case CmdPrintConfiguredCatalog:
 		err = sr.printConfiguredCatalogOnFile()
 
 	default:
@@ -218,12 +218,26 @@ func (sr SourceRunner) read() error {
 }
 
 func (sr *SourceRunner) printConfiguredCatalogOnFile() error {
-	ct, err := sr.src.Discover(sr.mw, sr.cp)
+	catalog, err := sr.src.Discover(sr.mw, sr.cp)
 	if err != nil {
 		return err
 	}
 
-	data, err := json.Marshal(ct)
+	configuredStreams := []protocol.ConfiguredStream{}
+
+	for _, stream := range catalog.Streams {
+		configuredStreams = append(configuredStreams, protocol.ConfiguredStream{
+			Stream:              stream,
+			SyncMode:            protocol.SyncModeFullRefresh,
+			DestinationSyncMode: protocol.DestinationSyncModeOverwrite,
+		})
+	}
+
+	configuredCatalog := protocol.ConfiguredCatalog{
+		Streams: configuredStreams,
+	}
+
+	jsonConfiguredCatalog, err := json.Marshal(configuredCatalog)
 	if err != nil {
 		return err
 	}
@@ -235,5 +249,5 @@ func (sr *SourceRunner) printConfiguredCatalogOnFile() error {
 		return err
 	}
 
-	return os.WriteFile("sample_files/configured_catalog.json", data, 0755)
+	return os.WriteFile("sample_files/configured_catalog.json", jsonConfiguredCatalog, 0755)
 }
