@@ -7,24 +7,26 @@ import (
 	"github.com/theobitoproject/kankuro/pkg/protocol"
 )
 
-// MaxLimitAllowed is the max amount of objects that can be fecthed from random API platform
 const (
-	MinLimitAllowed = 2
-	MaxLimitAllowed = 100
+	recordMarshalerWorkers = 4
+	csvWriterWorkers       = 2
+
+	minLimitAllowed = 2
+	maxLimitAllowed = 100
 )
 
-type csvDestination struct{}
+type destinationCsv struct{}
 
 type sourceConfiguration struct {
 	Limit int `json:"limit"`
 }
 
-func newCsvDestination() *csvDestination {
-	return &csvDestination{}
+func newDestinationCsv() *destinationCsv {
+	return &destinationCsv{}
 }
 
 // Spec returns the schema which described how the destination connector can be configured
-func (d *csvDestination) Spec(
+func (d *destinationCsv) Spec(
 	mw messenger.MessageWriter,
 	cp messenger.ConfigParser,
 ) (*protocol.ConnectorSpecification, error) {
@@ -32,13 +34,13 @@ func (d *csvDestination) Spec(
 		DocumentationURL:      "https://example-csv-api.com/",
 		ChangeLogURL:          "https://example-csv-api.com/",
 		SupportsIncremental:   false,
-		SupportsNormalization: true,
-		SupportsDBT:           true,
+		SupportsNormalization: false,
+		SupportsDBT:           false,
 		SupportedDestinationSyncModes: []protocol.DestinationSyncMode{
 			protocol.DestinationSyncModeOverwrite,
 		},
 		ConnectionSpecification: protocol.ConnectionSpecification{
-			Title:       "Example CSV",
+			Title:       "Golang - Local CSV",
 			Description: "Example CSV",
 			Type:        "object",
 			Required:    []protocol.PropertyName{"limit"},
@@ -47,8 +49,8 @@ func (d *csvDestination) Spec(
 					"limit": {
 						Description: fmt.Sprintf(
 							"max number of element to pull per instance. Allowed values between %d and %d",
-							MinLimitAllowed,
-							MaxLimitAllowed,
+							minLimitAllowed,
+							maxLimitAllowed,
 						),
 						PropertyType: protocol.PropertyType{
 							Type: []protocol.PropType{
@@ -63,7 +65,7 @@ func (d *csvDestination) Spec(
 }
 
 // Check verifies that, given a configuration, data can be accessed properly
-func (d *csvDestination) Check(
+func (d *destinationCsv) Check(
 	mw messenger.MessageWriter,
 	cp messenger.ConfigParser,
 ) error {
@@ -78,16 +80,18 @@ func (d *csvDestination) Check(
 		return err
 	}
 
-	if sc.Limit < MinLimitAllowed {
-		msg := fmt.Sprintf("limit configuration value must be greater than or equal to %d", MinLimitAllowed)
-		mw.WriteLog(protocol.LogLevelInfo, msg)
-		return fmt.Errorf(msg)
+	if sc.Limit < minLimitAllowed {
+		return fmt.Errorf(
+			"limit configuration value must be greater than or equal to %d",
+			minLimitAllowed,
+		)
 	}
 
-	if sc.Limit > MaxLimitAllowed {
-		msg := fmt.Sprintf("limit configuration value must be less than or equal to %d", MaxLimitAllowed)
-		mw.WriteLog(protocol.LogLevelInfo, msg)
-		return fmt.Errorf(msg)
+	if sc.Limit > maxLimitAllowed {
+		return fmt.Errorf(
+			"limit configuration value must be less than or equal to %d",
+			maxLimitAllowed,
+		)
 	}
 
 	return nil
@@ -96,7 +100,7 @@ func (d *csvDestination) Check(
 // Write takes the data from the record channel
 // and stores it in the destination
 // Note: all channels except record channel from hub needs to be closed
-func (d *csvDestination) Write(
+func (d *destinationCsv) Write(
 	cc *protocol.ConfiguredCatalog,
 	mw messenger.MessageWriter,
 	cp messenger.ConfigParser,
@@ -114,21 +118,33 @@ func (d *csvDestination) Write(
 		return
 	}
 
-	doneStreamChannel := make(chan bool)
+	csvRecordChan := newCsvRecordChannel()
+	recordMarshalerWorkersChan := make(chan bool)
+	csvWriterWorkersChan := make(chan bool)
 
-	go func() {
-		for i := 0; i < len(cc.Streams); i++ {
-			<-doneStreamChannel
-		}
+	rm := newRecordMarshaler(hub, csvRecordChan, recordMarshalerWorkersChan)
+	rm.writeHeaders(cc.Streams)
+	for i := 0; i < recordMarshalerWorkers; i++ {
+		rm.addWorker()
+	}
 
-		close(hub.GetErrorChannel())
-	}()
+	cw := newCsvWriter(hub, csvRecordChan, csvWriterWorkersChan)
+	for i := 0; i < csvWriterWorkers; i++ {
+		cw.addWorker()
+	}
 
-	csvRecordChann := newCsvRecordChannel()
+	for i := 0; i < recordMarshalerWorkers; i++ {
+		<-recordMarshalerWorkersChan
+	}
+	close(csvRecordChan)
+	for i := 0; i < csvWriterWorkers; i++ {
+		<-csvWriterWorkersChan
+	}
 
-	rm := newCsvRecordMarshaler(hub, csvRecordChann, doneStreamChannel)
-	rm.addWorker()
+	close(recordMarshalerWorkersChan)
+	close(csvWriterWorkersChan)
 
-	cfh := newCsvFileHandler(hub, csvRecordChann, doneStreamChannel)
-	cfh.addWorker()
+	cw.closeAndFlush()
+
+	close(hub.GetErrorChannel())
 }

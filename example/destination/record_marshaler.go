@@ -9,57 +9,82 @@ import (
 	"github.com/theobitoproject/kankuro/pkg/protocol"
 )
 
-type csvRecordMarshaler struct {
-	hub               messenger.ChannelHub
-	csvRecordChann    csvRecordChannel
-	doneStreamChannel chan bool
-	workersAmount     int
+type recordMarshaler struct {
+	hub             messenger.ChannelHub
+	csvRecordChann  csvRecordChannel
+	workersDoneChan chan bool
+	fieldsPerStream map[string][]string
 }
 
-func newCsvRecordMarshaler(
+func newRecordMarshaler(
 	hub messenger.ChannelHub,
 	csvRecordChann csvRecordChannel,
-	doneStreamChannel chan bool,
-) *csvRecordMarshaler {
-	return &csvRecordMarshaler{
-		hub:               hub,
-		csvRecordChann:    csvRecordChann,
-		doneStreamChannel: doneStreamChannel,
-		workersAmount:     0,
+	workersDoneChan chan bool,
+) *recordMarshaler {
+	return &recordMarshaler{
+		hub:             hub,
+		csvRecordChann:  csvRecordChann,
+		workersDoneChan: workersDoneChan,
+		fieldsPerStream: map[string][]string{},
 	}
 }
 
-func (rp *csvRecordMarshaler) addWorker() {
-	rp.workersAmount++
-
+func (rm *recordMarshaler) addWorker() {
 	go func() {
-		for rec := range rp.hub.GetRecordChannel() {
-			csvRec, err := marshal(rec)
+		for {
+			rec, channelOpen := <-rm.hub.GetRecordChannel()
+			if !channelOpen {
+				rm.removeWorker()
+				return
+			}
+
+			csvRec, err := rm.marshal(rec)
 			if err != nil {
-				rp.hub.GetErrorChannel() <- err
+				rm.hub.GetErrorChannel() <- err
 				continue
 			}
 
-			rp.csvRecordChann <- csvRec
-		}
-
-		rp.workersAmount--
-
-		if rp.workersAmount == 0 {
-			// close(rp.csvRecordChann)
-			rp.doneStreamChannel <- true
+			rm.csvRecordChann <- csvRec
 		}
 	}()
 }
 
-func marshal(rec *protocol.Record) (*csvRecord, error) {
+func (rm *recordMarshaler) writeHeaders(streams []protocol.ConfiguredStream) {
+	go func() {
+		for _, stream := range streams {
+			headers := []string{}
+
+			for propertyName := range stream.Stream.JSONSchema.Properties {
+				headers = append(headers, string(propertyName))
+			}
+
+			csvRec := &csvRecord{
+				streamName: stream.Stream.Name,
+				data:       headers,
+			}
+
+			rm.csvRecordChann <- csvRec
+
+			rm.fieldsPerStream[stream.Stream.Name] = headers
+		}
+	}()
+}
+
+func (rm *recordMarshaler) removeWorker() {
+	rm.workersDoneChan <- true
+}
+
+func (rm *recordMarshaler) marshal(rec *protocol.Record) (*csvRecord, error) {
 	csvRec := &csvRecord{
 		streamName: rec.Stream,
 	}
 
-	for _, v := range *rec.Data {
+	fields := rm.fieldsPerStream[rec.Stream]
 
-		str, err := convertToString(v)
+	for _, f := range fields {
+		data := *rec.Data
+
+		str, err := convertToString(data[f])
 		if err != nil {
 			panic(err)
 		}
@@ -79,6 +104,9 @@ func convertToString(v interface{}) (string, error) {
 		return strconv.Itoa(assert), nil
 
 	case float64:
+		if assert == float64(int64(assert)) {
+			return strconv.Itoa(int(assert)), nil
+		}
 		return fmt.Sprintf("%f", assert), nil
 
 	case []interface{}:

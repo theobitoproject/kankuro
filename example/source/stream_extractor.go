@@ -14,9 +14,7 @@ type streamExtractor struct {
 	hub                  messenger.ChannelHub
 	limit                int
 	url                  string
-
-	workersAmount   int
-	workersDoneChan chan bool
+	workersDoneChan      chan bool
 }
 
 func newStreamExtractor(
@@ -26,14 +24,11 @@ func newStreamExtractor(
 	url string,
 	workersDoneChan chan bool,
 ) *streamExtractor {
-	workersAmount := 0
-
 	return &streamExtractor{
 		configuredStreamChan,
 		hub,
 		limit,
 		url,
-		workersAmount,
 		workersDoneChan,
 	}
 }
@@ -41,8 +36,6 @@ func newStreamExtractor(
 func (se *streamExtractor) addWorker(
 	configuredStream protocol.ConfiguredStream,
 ) {
-	se.workersAmount++
-
 	go func() {
 		defer se.removeWorker()
 
