@@ -13,11 +13,11 @@ import (
 type ConfigParser interface {
 	// GetMainCommand returns the comand to run the connector (spec, check, discover, read)
 	GetMainCommand() (protocol.Cmd, error)
-	// UnmarshalSourceConfigPath unmarshals source config json file into a struct
-	UnmarshalSourceConfigPath(v interface{}) error
-	// UnmarshalSourceConfigPath unmarshals state json file into a struct
+	// UnmarshalConfigPath unmarshals source config json file into a struct
+	UnmarshalConfigPath(v interface{}) error
+	// UnmarshalStatePath unmarshals state json file into a struct
 	UnmarshalStatePath(v interface{}) error
-	// UnmarshalSourceConfigPath unmarshals catalog json file into a struct
+	// UnmarshalCatalogPath unmarshals catalog json file into a struct
 	UnmarshalCatalogPath(v interface{}) error
 }
 
@@ -38,8 +38,8 @@ func (cp *configParser) GetMainCommand() (protocol.Cmd, error) {
 	return protocol.Cmd(cp.args[1]), nil
 }
 
-// UnmarshalSourceConfigPath unmarshals source config json file into a struct
-func (cp *configParser) UnmarshalSourceConfigPath(v interface{}) error {
+// UnmarshalConfigPath unmarshals source config json file into a struct
+func (cp *configParser) UnmarshalConfigPath(v interface{}) error {
 	path, err := cp.getFlagConfigValue(protocol.ConfigCmdFlag)
 	if err != nil {
 		return nil

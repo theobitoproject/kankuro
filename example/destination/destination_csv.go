@@ -33,7 +33,6 @@ func (d *destinationCsv) Spec(
 	return &protocol.ConnectorSpecification{
 		DocumentationURL:      "https://example-csv-api.com/",
 		ChangeLogURL:          "https://example-csv-api.com/",
-		SupportsIncremental:   false,
 		SupportsNormalization: false,
 		SupportsDBT:           false,
 		SupportedDestinationSyncModes: []protocol.DestinationSyncMode{
@@ -129,7 +128,7 @@ func (d *destinationCsv) createDestinationPath(
 	cp messenger.ConfigParser,
 ) (string, error) {
 	var dc destinationConfiguration
-	err := cp.UnmarshalSourceConfigPath(&dc)
+	err := cp.UnmarshalConfigPath(&dc)
 	if err != nil {
 		return "", err
 	}

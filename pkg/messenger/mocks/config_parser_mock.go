@@ -63,18 +63,18 @@ func (mr *MockConfigParserMockRecorder) UnmarshalCatalogPath(v interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnmarshalCatalogPath", reflect.TypeOf((*MockConfigParser)(nil).UnmarshalCatalogPath), v)
 }
 
-// UnmarshalSourceConfigPath mocks base method.
-func (m *MockConfigParser) UnmarshalSourceConfigPath(v interface{}) error {
+// UnmarshalConfigPath mocks base method.
+func (m *MockConfigParser) UnmarshalConfigPath(v interface{}) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UnmarshalSourceConfigPath", v)
+	ret := m.ctrl.Call(m, "UnmarshalConfigPath", v)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UnmarshalSourceConfigPath indicates an expected call of UnmarshalSourceConfigPath.
-func (mr *MockConfigParserMockRecorder) UnmarshalSourceConfigPath(v interface{}) *gomock.Call {
+// UnmarshalConfigPath indicates an expected call of UnmarshalConfigPath.
+func (mr *MockConfigParserMockRecorder) UnmarshalConfigPath(v interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnmarshalSourceConfigPath", reflect.TypeOf((*MockConfigParser)(nil).UnmarshalSourceConfigPath), v)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnmarshalConfigPath", reflect.TypeOf((*MockConfigParser)(nil).UnmarshalConfigPath), v)
 }
 
 // UnmarshalStatePath mocks base method.

@@ -95,7 +95,7 @@ func (s *sourceRandomAPI) Check(
 	}
 
 	var sc sourceConfiguration
-	err = cp.UnmarshalSourceConfigPath(&sc)
+	err = cp.UnmarshalConfigPath(&sc)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (s *sourceRandomAPI) Read(
 	}
 
 	var sc sourceConfiguration
-	err = cp.UnmarshalSourceConfigPath(&sc)
+	err = cp.UnmarshalConfigPath(&sc)
 	if err != nil {
 		hub.GetErrorChannel() <- err
 		return
