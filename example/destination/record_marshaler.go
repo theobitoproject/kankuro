@@ -97,6 +97,9 @@ func (rm *recordMarshaler) marshal(rec *protocol.Record) (*csvRecord, error) {
 
 func convertToString(v interface{}) (string, error) {
 	switch assert := v.(type) {
+	case nil:
+		return "", nil
+
 	case string:
 		return assert, nil
 

@@ -37,7 +37,7 @@ func main() {
 
 	now := time.Now()
 
-	dst := newDestinationCsv()
+	dst := newDestinationCsv(".") // "." means current directory
 	runner := destination.NewSafeDestinationRunner(dst, w, r, os.Args)
 	err = runner.Start()
 	if err != nil {

@@ -1,7 +1,8 @@
 package main
 
 import (
-	"fmt"
+	"os"
+	"strings"
 
 	"github.com/theobitoproject/kankuro/pkg/messenger"
 	"github.com/theobitoproject/kankuro/pkg/protocol"
@@ -10,19 +11,18 @@ import (
 const (
 	recordMarshalerWorkers = 4
 	csvWriterWorkers       = 2
-
-	minLimitAllowed = 2
-	maxLimitAllowed = 100
 )
 
-type destinationCsv struct{}
-
-type sourceConfiguration struct {
-	Limit int `json:"limit"`
+type destinationCsv struct {
+	rootPath string
 }
 
-func newDestinationCsv() *destinationCsv {
-	return &destinationCsv{}
+type destinationConfiguration struct {
+	DestinationPath string `json:"destination_path"`
+}
+
+func newDestinationCsv(rootPath string) *destinationCsv {
+	return &destinationCsv{rootPath}
 }
 
 // Spec returns the schema which described how the destination connector can be configured
@@ -41,20 +41,16 @@ func (d *destinationCsv) Spec(
 		},
 		ConnectionSpecification: protocol.ConnectionSpecification{
 			Title:       "Golang - Local CSV",
-			Description: "Example CSV",
+			Description: "This destination writes all data in CSV files",
 			Type:        "object",
-			Required:    []protocol.PropertyName{"limit"},
+			Required:    []protocol.PropertyName{"destination_path"},
 			Properties: protocol.Properties{
 				Properties: map[protocol.PropertyName]protocol.PropertySpec{
-					"limit": {
-						Description: fmt.Sprintf(
-							"max number of element to pull per instance. Allowed values between %d and %d",
-							minLimitAllowed,
-							maxLimitAllowed,
-						),
+					"destination_path": {
+						Description: "path where files will be placed",
 						PropertyType: protocol.PropertyType{
 							Type: []protocol.PropType{
-								protocol.Integer,
+								protocol.String,
 							},
 						},
 					},
@@ -69,31 +65,7 @@ func (d *destinationCsv) Check(
 	mw messenger.MessageWriter,
 	cp messenger.ConfigParser,
 ) error {
-	err := mw.WriteLog(protocol.LogLevelInfo, "checking random api source")
-	if err != nil {
-		return err
-	}
-
-	var sc sourceConfiguration
-	err = cp.UnmarshalSourceConfigPath(&sc)
-	if err != nil {
-		return err
-	}
-
-	if sc.Limit < minLimitAllowed {
-		return fmt.Errorf(
-			"limit configuration value must be greater than or equal to %d",
-			minLimitAllowed,
-		)
-	}
-
-	if sc.Limit > maxLimitAllowed {
-		return fmt.Errorf(
-			"limit configuration value must be less than or equal to %d",
-			maxLimitAllowed,
-		)
-	}
-
+	// TODO: check properly
 	return nil
 }
 
@@ -111,8 +83,7 @@ func (d *destinationCsv) Write(
 		hub.GetErrorChannel() <- err
 	}
 
-	var sc sourceConfiguration
-	err = cp.UnmarshalSourceConfigPath(&sc)
+	absoluteDestinationPath, err := d.createDestinationPath(cp)
 	if err != nil {
 		hub.GetErrorChannel() <- err
 		return
@@ -128,7 +99,12 @@ func (d *destinationCsv) Write(
 		rm.addWorker()
 	}
 
-	cw := newCsvWriter(hub, csvRecordChan, csvWriterWorkersChan)
+	cw := newCsvWriter(
+		hub,
+		csvRecordChan,
+		absoluteDestinationPath,
+		csvWriterWorkersChan,
+	)
 	for i := 0; i < csvWriterWorkers; i++ {
 		cw.addWorker()
 	}
@@ -147,4 +123,30 @@ func (d *destinationCsv) Write(
 	cw.closeAndFlush()
 
 	close(hub.GetErrorChannel())
+}
+
+func (d *destinationCsv) createDestinationPath(
+	cp messenger.ConfigParser,
+) (string, error) {
+	var dc destinationConfiguration
+	err := cp.UnmarshalSourceConfigPath(&dc)
+	if err != nil {
+		return "", err
+	}
+
+	// TODO: is this the best way to check destination path
+	// starts with "/"
+	destinationPath := dc.DestinationPath
+	if !strings.HasPrefix(destinationPath, "/") {
+		destinationPath = "/" + destinationPath
+	}
+
+	absoluteDestinationPath := d.rootPath + destinationPath
+
+	err = os.MkdirAll(absoluteDestinationPath, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+
+	return absoluteDestinationPath, nil
 }
