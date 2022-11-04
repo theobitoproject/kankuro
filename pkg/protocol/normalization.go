@@ -17,3 +17,11 @@ const (
 	// the entire data for a single point/row/document
 	AirbyteData = "_airbyte_data"
 )
+
+// RawRecord is the the raw format for a single data point
+// without any normalization (Raw data (JSON) option)
+type RawRecord struct {
+	ID        string      `json:"_airbyte_ab_id"`
+	EmittedAt int64       `json:"_airbyte_emitted_at"`
+	Data      *RecordData `json:"_airbyte_data"`
+}
