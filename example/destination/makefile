@@ -1,3 +1,7 @@
+.PHONY: spec
+spec:
+	go run -race . spec
+
 .PHONY: check
 check:
 	go run -race . check --config secrets/config.json
