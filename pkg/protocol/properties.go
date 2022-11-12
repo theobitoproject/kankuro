@@ -10,6 +10,7 @@ type PropertyName string
 
 // PropertySpec defines the specification for a single property
 type PropertySpec struct {
+	Title        string `json:"title"`
 	Description  string `json:"description"`
 	PropertyType `json:",omitempty"`
 	Examples     []string                      `json:"examples,omitempty"`

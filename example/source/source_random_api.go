@@ -46,6 +46,7 @@ func (s *sourceRandomAPI) Spec(
 			Properties: protocol.Properties{
 				Properties: map[protocol.PropertyName]protocol.PropertySpec{
 					"limit": {
+						Title: "Limit",
 						Description: fmt.Sprintf(
 							"Max number of element to pull per instance. Allowed values between %d and %d",
 							minLimitAllowed,
