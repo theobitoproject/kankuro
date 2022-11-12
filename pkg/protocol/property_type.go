@@ -7,6 +7,8 @@ const (
 	Number PropType = "number"
 	// Integer defines integer property type
 	Integer PropType = "integer"
+	// Boolean defines boolean property type
+	Boolean PropType = "boolean"
 	// Object defines object property type
 	Object PropType = "object"
 	// Array defines array property type
