@@ -17,6 +17,7 @@ type PropertySpec struct {
 	Items        map[string]interface{}        `json:"items,omitempty"`
 	Properties   map[PropertyName]PropertySpec `json:"properties,omitempty"`
 	IsSecret     bool                          `json:"airbyte_secret,omitempty"`
+	Order        int                           `json:"order,omitempty"`
 }
 
 // PropertyType defines the type of property for a property specification
